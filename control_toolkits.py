@@ -34,9 +34,10 @@ class RFMToolkit():
             assert(len(val_X) == len(val_y))
 
             u = direction_utils.train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams)
+            
+            # Assumes we are using a single direction for RFM for the benchmark
             directions[layer_to_eval] = u.reshape(1, -1)
 
-            
         signs = {}
         if num_classes == 1: # only if binary do you compute signs
             signs = self._compute_signs(hidden_states, all_y, directions, n_components)
