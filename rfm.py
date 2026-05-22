@@ -141,7 +141,7 @@ def get_top_dir_err(X, y, M):
         except torch._C._LinAlgError:
             epsilon *= 10  # Increase regularization
             print(f"Warning: Matrix ill-conditioned. Retrying with epsilon={epsilon}")
-            concept_features += epsilon * torch.eye(M.shape[0], device=M.device)
+            M += epsilon * torch.eye(M.shape[0], device=M.device)
     else:
         raise RuntimeError("linalg.eigh failed to converge even with regularization.")
 
