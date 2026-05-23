@@ -141,7 +141,7 @@ def get_top_dir_err(X, y, M):
         except torch._C._LinAlgError:
             epsilon *= 10  # Increase regularization
             print(f"Warning: Matrix ill-conditioned. Retrying with epsilon={epsilon}")
-            concept_features += epsilon * torch.eye(M.shape[0], device=M.device)
+            M += epsilon * torch.eye(M.shape[0], device=M.device)
     else:
         raise RuntimeError("linalg.eigh failed to converge even with regularization.")
 
@@ -198,7 +198,11 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
             best_u = u.clone()
 
         M = get_grads_2(X_train, X_train, sol, L, M)
-        M /= M.max()
+        if M.max() > 0:
+            M /= M.max()
+        else:
+            print("Warning: M is zero, stopping iterations")
+            break
 
     return best_u, best_r 
 
