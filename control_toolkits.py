@@ -14,7 +14,8 @@ class RFMToolkit():
                             _test_data=None, _test_labels=None):
         train_indices, val_indices = split_indices(len(data))
 
-        all_y = labels.float().cuda()
+        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda")
+        all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
         num_classes = all_y.shape[1]
@@ -26,7 +27,7 @@ class RFMToolkit():
         detector_coefs = {}
 
         for layer_to_eval in tqdm(hidden_layers):
-            hidden_states_at_layer = hidden_states[layer_to_eval].cuda().float()
+            hidden_states_at_layer = hidden_states[layer_to_eval].to(device).float()
             train_X = hidden_states_at_layer[train_indices]
             val_X = hidden_states_at_layer[val_indices]
 
@@ -72,7 +73,8 @@ class LinearProbeToolkit():
         train_indices, val_indices = split_indices(len(data))
         test_data_provided = test_data is not None 
         
-        all_y = labels.float().cuda()
+        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda") 
+        all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
         num_classes = all_y.shape[1]
@@ -92,7 +94,7 @@ class LinearProbeToolkit():
             test_hidden_states = direction_utils.get_hidden_states(test_data, llm, model, tokenizer, hidden_layers, hyperparams['forward_batch_size'])
             test_direction_accs = {}
             test_predictor_accs = {}
-            test_y = torch.tensor(test_labels).reshape(-1, num_classes).float().cuda()
+            test_y = torch.tensor(test_labels).reshape(-1, num_classes).float().to(device)
             
             print('Sample test hidden states:', test_hidden_states[-1].shape, 'labels:', test_y.shape)
 
@@ -101,7 +103,7 @@ class LinearProbeToolkit():
         detector_coefs = {}
 
         for layer_to_eval in tqdm(hidden_layers):
-            hidden_states_at_layer = hidden_states[layer_to_eval].cuda().float()
+            hidden_states_at_layer = hidden_states[layer_to_eval].to(device).float()
             train_X = hidden_states_at_layer[train_indices] 
             val_X = hidden_states_at_layer[val_indices]
                 
@@ -129,7 +131,7 @@ class LinearProbeToolkit():
             
             if test_data_provided:
                
-                test_X = test_hidden_states[layer_to_eval].cuda().float()
+                test_X = test_hidden_states[layer_to_eval].to(device).float()
                 
                 ### Generate predictor outputs
                 val_preds = val_X@vec + bias
@@ -198,7 +200,8 @@ class LogisticRegressionToolkit():
                             _test_data=None, _test_labels=None):
         train_indices, val_indices = split_indices(len(data))
 
-        all_y = labels.float().cuda()
+        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda")
+        all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
         num_classes = all_y.shape[1]
@@ -209,7 +212,7 @@ class LogisticRegressionToolkit():
         detector_coefs = {}
 
         for layer_to_eval in tqdm(hidden_layers):
-            hidden_states_at_layer = hidden_states[layer_to_eval].cuda().float()
+            hidden_states_at_layer = hidden_states[layer_to_eval].to(device).float()
             train_X = hidden_states_at_layer[train_indices]
             val_X = hidden_states_at_layer[val_indices]
 
@@ -285,7 +288,8 @@ class MeanDifferenceToolkit():
         train_indices, val_indices = split_indices(len(data))
         test_data_provided = test_data is not None 
         
-        all_y = labels.float().cuda()
+        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda") 
+        all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
         num_classes = all_y.shape[1]
@@ -297,7 +301,7 @@ class MeanDifferenceToolkit():
         if test_data_provided:
             test_hidden_states = direction_utils.get_hidden_states(test_data, llm, model, tokenizer, hidden_layers, hyperparams['forward_batch_size'])
             test_direction_accs = {}
-            test_y = torch.tensor(test_labels).reshape(-1,num_classes).float().cuda()
+            test_y = torch.tensor(test_labels).reshape(-1,num_classes).float().to(device)
 
             print('Sample test hidden states:', test_hidden_states[-1].shape, 'labels:', test_y.shape)
 
@@ -309,7 +313,7 @@ class MeanDifferenceToolkit():
         directions = {}
 
         for layer_to_eval in tqdm(hidden_layers):
-            hidden_states_at_layer = hidden_states[layer_to_eval].cuda().float()
+            hidden_states_at_layer = hidden_states[layer_to_eval].to(device).float()
             train_X = hidden_states_at_layer[train_indices]
             val_X = hidden_states_at_layer[val_indices]
             
@@ -330,7 +334,7 @@ class MeanDifferenceToolkit():
             
             if test_data_provided:
                
-                test_X = test_hidden_states[layer_to_eval].cuda().float()
+                test_X = test_hidden_states[layer_to_eval].to(device).float()
                 
                 # learn the shift on training data
                 mean_dif_vec = concept_features.reshape(-1).to(device=train_X.device)
@@ -370,7 +374,8 @@ class PCAToolkit():
                             _test_data=None, _test_labels=None):
         train_indices, val_indices = split_indices(len(data))
 
-        all_y = labels.float().cuda()
+        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda")
+        all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
 
@@ -381,7 +386,7 @@ class PCAToolkit():
         directions = {}
 
         for layer_to_eval in tqdm(hidden_layers):
-            hidden_states_at_layer = hidden_states[layer_to_eval].cuda().float()
+            hidden_states_at_layer = hidden_states[layer_to_eval].to(device).float()
             train_X = hidden_states_at_layer[train_indices]
             val_X = hidden_states_at_layer[val_indices]
 

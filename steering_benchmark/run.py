@@ -13,6 +13,9 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import os
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"  # for Mac users with MPS; must come before torch import
+
 import torch
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -21,13 +24,13 @@ from utils import LLMType
 from collections import namedtuple
 from tqdm import tqdm
 import gc
-import os
 import utils
 
 SEED = 0
 torch.manual_seed(SEED)
 torch.cuda.manual_seed(SEED)
 np.random.seed(SEED)
+
 
 LLM = namedtuple('LLM', ['language_model', 'tokenizer', 'processor', 'name', 'model_type'])
 
