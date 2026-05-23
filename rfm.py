@@ -198,7 +198,11 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
             best_u = u.clone()
 
         M = get_grads_2(X_train, X_train, sol, L, M)
-        M /= M.max()
+        if M.max() > 0:
+            M /= M.max()
+        else:
+            print("Warning: M is zero, stopping iterations")
+            break
 
     return best_u, best_r 
 
