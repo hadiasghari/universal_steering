@@ -53,7 +53,9 @@ def select_llm(model_type, MODEL_VERSION='3.1', MODEL_SIZE='8B'):
             model_id = "unsloth/Llama-3.3-70B-Instruct-bnb-4bit"
 
         language_model = AutoModelForCausalLM.from_pretrained(
-            model_id, device_map="cuda",
+            model_id, 
+            device_map="auto", 
+            torch_dtype=torch.bfloat16
         )
 
         use_fast_tokenizer = "LlamaForCausalLM" not in language_model.config.architectures
@@ -173,7 +175,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Compute steering directions for concepts")
     parser.add_argument("--model_set", type=str, default='phi')
-    parser.add_argument("--model_version", type=str, default='3-medium-4k-instruct')
+    parser.add_argument("--model_version", type=str, default=None)
     parser.add_argument("--model_size", type=str, default=None)
     parser.add_argument("--concepts_to_steer", type=str, default='all')
     args = parser.parse_args()
@@ -209,6 +211,9 @@ def main():
                 MODEL_SIZE = '7B'
             elif MODEL_VERSION == 'Large-Instruct-2407-4bit':
                 MODEL_SIZE = '120B'
+        elif MODEL_SET == 'llama':
+            MODEL_VERSION = '3.1'
+            MODEL_SIZE = '8B'
 
     llm = select_llm(MODEL_SET, MODEL_VERSION=MODEL_VERSION, MODEL_SIZE=MODEL_SIZE)
     METHOD = 'rfm'
