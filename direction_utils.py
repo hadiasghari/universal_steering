@@ -2,13 +2,11 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from utils import LLMType
-
+from gpu_setup import device, empty_cache
 import rfm
 from sklearn.linear_model import LogisticRegression
-
 from sklearn.model_selection import train_test_split
 from torchmetrics.regression import R2Score
-
 from copy import deepcopy
 from tqdm import tqdm
 import time 
@@ -20,8 +18,8 @@ def batch_transpose_multiply(A, B, mb_size=5000):
     batches = torch.split(torch.arange(n), mb_size)
     sum = 0.
     for b in batches:
-        Ab = A[b].cuda()
-        Bb = B[b].cuda()
+        Ab = A[b].to(device)
+        Bb = B[b].to(device)
         sum += Ab.T @ Bb
 
         del Ab, Bb
@@ -224,7 +222,7 @@ def project_hidden_states(hidden_states, directions, n_components):
     projections = {}
     for layer in layers:
         vecs = directions[layer][:n_components].T
-        projections[layer] = hidden_states[layer].cuda()@vecs.cuda()
+        projections[layer] = hidden_states[layer].to(device)@vecs.to(device)
     return projections
 
 def aggregate_projections_on_coefs(projections, detector_coef):
@@ -244,7 +242,7 @@ def aggregate_projections_on_coefs(projections, detector_coef):
     layers = projections.keys()
     agg_projections = []
     for layer in layers:
-        X = projections[layer].cuda()
+        X = projections[layer].to(device)
         agg_projections.append(X.squeeze(0))
     
     # print("X", X.shape)
@@ -256,7 +254,7 @@ def aggregate_projections_on_coefs(projections, detector_coef):
     agg_preds = agg_projections@agg_beta + agg_bias
     return agg_preds
 
-def project_onto_direction(tensors, direction, device='cuda'):
+def project_onto_direction(tensors, direction):  #, device='cuda'):
     """
     tensors : (n, d)
     direction : (d, )
@@ -378,7 +376,7 @@ def aggregate_layers(layer_outputs, val_y, test_y, use_logistic=False, use_rfm=F
 
     
     if use_rfm:
-        model = LaplaceRFM(bandwidth=100, reg=1e-3, device='cuda')
+        model = LaplaceRFM(bandwidth=100, reg=1e-3, device=device)
         model.fit(
             (val_X, val_y), 
             (test_X, test_y), 
@@ -418,10 +416,10 @@ def train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams,
     best_s = None
     best_norm = None
 
-    # train_X = train_X.cuda()
-    # train_y = train_y.cuda()
-    # val_X = val_X.cuda()
-    # val_y = val_y.cuda()
+    # train_X = train_X.to(device)
+    # train_y = train_y.to(device)
+    # val_X = val_X.to(device)
+    # val_y = val_y.to(device)
 
     # norm = False
     reg = 1e-3
@@ -447,7 +445,7 @@ def train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams,
                 best_bw = bw
                 best_norm = norm
 
-            torch.cuda.empty_cache()
+            empty_cache()
 
     # print(f'Best RFM loss: {best_loss}, R2: {best_val_r2}, reg: {best_reg}, bw: {best_bw}, acc: {best_acc}')
     print(f'Best RFM r: {best_r}, reg: {best_reg}, bw: {best_bw}, norm: {best_norm}')
@@ -474,24 +472,24 @@ def train_linear_probe_on_concept(train_X, train_y, val_X, val_y, use_bias=False
         if n>d:
             XtX = batch_transpose_multiply(X, X)
             XtY = batch_transpose_multiply(X, train_y)
-            beta = torch.linalg.pinv(XtX + reg*torch.eye(X.shape[1]).cuda())@XtY
+            beta = torch.linalg.pinv(XtX + reg*torch.eye(X.shape[1]).to(device))@XtY
         else:
-            X = X.cuda()
-            train_y = train_y.cuda()
-            X = X.cuda()
-            Xval = Xval.cuda()
+            X = X.to(device)
+            train_y = train_y.to(device)
+            X = X.to(device)
+            Xval = Xval.to(device)
 
             XXt = X@X.T
-            alpha = torch.linalg.pinv(XXt + reg*torch.eye(X.shape[0]).cuda())@train_y
+            alpha = torch.linalg.pinv(XXt + reg*torch.eye(X.shape[0]).to(device))@train_y
             beta = X.T@alpha
 
-        preds = Xval.cuda() @ beta
+        preds = Xval.to(device) @ beta
 
-        val_loss = torch.mean((preds-val_y.cuda())**2)
+        val_loss = torch.mean((preds-val_y.to(device))**2)
 
         if preds.shape[1] == 1:
-            r2score = R2Score().cuda()
-            val_r2 = r2score(preds, val_y.cuda()).item()
+            r2score = R2Score().to(device)
+            val_r2 = r2score(preds, val_y.to(device)).item()
         else:
             val_r2 = None
 

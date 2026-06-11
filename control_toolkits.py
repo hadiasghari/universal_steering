@@ -3,8 +3,8 @@ from sklearn.linear_model import LogisticRegression
 import direction_utils
 from utils import split_indices
 from sklearn.metrics import log_loss
-
 from tqdm import tqdm
+from gpu_setup import device
 
 class RFMToolkit():
     def __init__(self):
@@ -14,7 +14,6 @@ class RFMToolkit():
                             _test_data=None, _test_labels=None):
         train_indices, val_indices = split_indices(len(data))
 
-        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda")
         all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
@@ -73,7 +72,6 @@ class LinearProbeToolkit():
         train_indices, val_indices = split_indices(len(data))
         test_data_provided = test_data is not None 
         
-        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda") 
         all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
@@ -200,7 +198,6 @@ class LogisticRegressionToolkit():
                             _test_data=None, _test_labels=None):
         train_indices, val_indices = split_indices(len(data))
 
-        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda")
         all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
@@ -288,7 +285,6 @@ class MeanDifferenceToolkit():
         train_indices, val_indices = split_indices(len(data))
         test_data_provided = test_data is not None 
         
-        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda") 
         all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]
@@ -374,7 +370,6 @@ class PCAToolkit():
                             _test_data=None, _test_labels=None):
         train_indices, val_indices = split_indices(len(data))
 
-        device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda")
         all_y = labels.float().to(device)
         train_y = all_y[train_indices]
         val_y = all_y[val_indices]

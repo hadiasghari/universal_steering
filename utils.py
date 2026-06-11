@@ -47,7 +47,9 @@ def load_model(model):
     if model=='llama_3_8b_it':
         model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
         language_model = AutoModelForCausalLM.from_pretrained(
-            model_id, device_map="cuda"
+            model_id, 
+            device_map="auto", 
+            torch_dtype=torch.bfloat16
         )
 
         use_fast_tokenizer = "LlamaForCausalLM" not in language_model.config.architectures
@@ -71,7 +73,7 @@ def load_model(model):
     
     elif model=='toxicchat-t5-large':
         tokenizer = AutoTokenizer.from_pretrained("t5-large")
-        language_model = AutoModelForSeq2SeqLM.from_pretrained("lmsys/toxicchat-t5-large-v1.0").to("cuda")
+        language_model = AutoModelForSeq2SeqLM.from_pretrained("lmsys/toxicchat-t5-large-v1.0", device_map="auto")
     
     tokenizer.pad_token_id = 0 if tokenizer.pad_token_id is None else tokenizer.pad_token_id
     print(f"Setting pad token id to: {tokenizer.pad_token_id}")

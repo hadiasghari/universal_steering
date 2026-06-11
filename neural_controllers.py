@@ -17,7 +17,7 @@ SEED = 0
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED)
+#torch.cuda.manual_seed(SEED)
 
 import generation_utils
 import direction_utils
@@ -26,6 +26,7 @@ from control_toolkits import (
     MeanDifferenceToolkit, PCAToolkit
 )
 from utils import LLMType
+from gpu_setup import device
 
 import os
 import pickle
@@ -243,10 +244,10 @@ class NeuralController:
             direction = direction.to(self.model.device).float()[:n_components]
             direction = direction.T
             
-            val_X = val_hidden_states[layer_to_eval].cuda().float()
+            val_X = val_hidden_states[layer_to_eval].to(device).float()
             projected_val = val_X@direction
             
-            test_X = test_hidden_states[layer_to_eval].cuda().float()
+            test_X = test_hidden_states[layer_to_eval].to(device).float()
             projected_test = test_X@direction
             
             if agg_positions:
@@ -352,7 +353,7 @@ class NeuralController:
             direction = direction.to(self.model.device).float()[:n_components]
             direction = direction.T
             
-            val_X = val_hidden_states[layer_to_eval].cuda().float()
+            val_X = val_hidden_states[layer_to_eval].to(device).float()
             projected_val = val_X@direction
             
             beta = direction_utils.linear_solve(projected_val, val_y, use_bias=False)

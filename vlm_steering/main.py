@@ -29,7 +29,7 @@ import utils
 
 SEED = 0
 torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED)
+#torch.cuda.manual_seed(SEED)
 np.random.seed(SEED)
 
 LLM = namedtuple('LLM', ['language_model', 'tokenizer', 'processor', 'name', 'model_type'])
@@ -48,7 +48,7 @@ def select_llm(model_type):
     if model_type == 'llama':
         model_id = "unsloth/Meta-Llama-3.1-70B-Instruct-bnb-4bit"
         language_model = AutoModelForCausalLM.from_pretrained(
-            model_id, device_map="cuda",
+            model_id, device_map="auto", 
         )
 
         use_fast_tokenizer = "LlamaForCausalLM" not in language_model.config.architectures

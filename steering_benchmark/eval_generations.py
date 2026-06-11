@@ -22,10 +22,11 @@ from tqdm import tqdm
 import pickle
 import gc
 import os
+from gpu_setup import device, empty_cache
 
 SEED = 0
 torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED)
+#torch.cuda.manual_seed(SEED)
 np.random.seed(SEED)
 
 LLM = namedtuple('LLM', ['language_model', 'tokenizer', 'processor', 'name', 'model_type'])
@@ -52,7 +53,9 @@ def select_llm(model_type, MODEL_VERSION='3.1', MODEL_SIZE='8B'):
             model_id = "unsloth/Llama-3.3-70B-Instruct-bnb-4bit"
 
         language_model = AutoModelForCausalLM.from_pretrained(
-            model_id, device_map="cuda",
+            model_id, 
+            device_map="auto",
+            torch_dtype=torch.bfloat16
         )
 
         use_fast_tokenizer = "LlamaForCausalLM" not in language_model.config.architectures
@@ -337,7 +340,7 @@ def main():
                 outputs = generate(concept, llm, prompt, image=None, coefs=COEFS,
                                    control_method=METHOD, max_tokens=50, gen_orig=False)
                 all_outputs[concept] = outputs
-                torch.cuda.empty_cache()
+                empty_cache()
 
                 # Cache incrementally for robustness
                 try:

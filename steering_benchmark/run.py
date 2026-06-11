@@ -9,13 +9,11 @@ Usage:
     python -m steering_benchmark.run --model_set phi --model_version 3-medium-4k-instruct
 """
 
+import gpu_setup
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
 import os
-os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"  # for Mac users with MPS; must come before torch import
-
 import torch
 import numpy as np
 from transformers import AutoTokenizer, AutoModelForCausalLM
@@ -28,7 +26,7 @@ import utils
 
 SEED = 0
 torch.manual_seed(SEED)
-torch.cuda.manual_seed(SEED)
+#torch.cuda.manual_seed(SEED)
 np.random.seed(SEED)
 
 

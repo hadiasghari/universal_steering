@@ -16,9 +16,10 @@ from torch.linalg import solve
 import time
 torch.set_default_dtype(torch.float32)
 torch.manual_seed(0)
-torch.cuda.manual_seed(0)
+#torch.cuda.manual_seed(0)
 from tqdm import tqdm
 from torcheval.metrics.functional import r2_score
+from gpu_setup import device
 
 
 def euclidean_distances_M_2(samples, samples_M_applied, centers, centers_M_applied, threshold=1e-3):
@@ -212,8 +213,8 @@ def main():
     n = 1000
     d = 100
     torch.manual_seed(0)
-    X_train = torch.randn(n,d).cuda()
-    X_test = torch.randn(n,d).cuda()
+    X_train = torch.randn(n,d).to(device)
+    X_test = torch.randn(n,d).to(device)
 
     # y_train = torch.where(X_train[:, 0] > 0, 1., 0).reshape(-1, 1)
     # y_test = torch.where(X_test[:, 0] > 0, 1., 0).reshape(-1, 1)
