@@ -1,2 +1,5 @@
-.claude
-__pycache__
+.DS_Store
+directions*/
+cached_outputs*/
+csvs*/
+*.pkl
