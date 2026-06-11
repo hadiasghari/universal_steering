@@ -366,6 +366,7 @@ class NeuralController:
         return composite_directions
         
     def save(self, concept, model_name, path='./', composite=False):
+        os.makedirs(path, exist_ok=True)
         if composite:
             filename = os.path.join(path, f'{self.control_method}_composite_{concept}_{model_name}.pkl')
         else:
@@ -374,7 +375,7 @@ class NeuralController:
         with open(filename, 'wb') as f:
             pickle.dump(self.directions, f)
 
-        if self.detector_coefs is not None:
+        if self.detector_coefs:
             detector_path = os.path.join(path, f'{self.control_method}_{concept}_{model_name}_detector.pkl')
             with open(detector_path, 'wb') as f:
                 pickle.dump(self.detector_coefs, f)

@@ -316,6 +316,7 @@ def main():
             else:
                 subconcepts_to_steer = concepts
 
+            os.makedirs('cached_outputs', exist_ok=True)
             out_file = f"cached_outputs/{METHOD}_{concept_label}_steered_500_concepts_{MODEL_TYPE}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.pkl"
 
             # Load existing cache if present
