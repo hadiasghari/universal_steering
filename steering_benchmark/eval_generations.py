@@ -284,6 +284,11 @@ def main():
             COEFS = [2.0, 2.25, 2.5, 2.75, 3.0]
         elif MODEL_VERSION == '4':
             COEFS = [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
+    elif MODEL_TYPE == 'llama':
+        if MODEL_SIZE == '8B':
+            COEFS = [0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
+        else:
+            COEFS = [0.4, 0.41, 0.42, 0.43, 0.44, 0.45]
     else:
         raise ValueError(f"Model type {MODEL_TYPE} not supported")
 
