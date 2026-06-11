@@ -107,6 +107,7 @@ def select_llm(model_type, MODEL_VERSION='3.1', MODEL_SIZE='8B'):
 
         print(f"Loading Falcon {MODEL_SIZE} model")
         tokenizer = AutoTokenizer.from_pretrained(model_id)
+        tokenizer.padding_side = "left"  # ?
         language_model = AutoModelForCausalLM.from_pretrained(
             model_id,
             device_map="auto",
