@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from steering_benchmark.parse_results import JUDGE
+
 
 def readfile(fname):
     """Read a CSV file and count steered successes."""
@@ -63,7 +65,7 @@ def main():
         for method in methods:
             results[method] = []
             for concept in concepts:
-                fname = f'csvs/{method}_{concept}_gpt4o_outputs_500_concepts_{MODEL_SET}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.csv'
+                fname = f'csvs/{method}_{concept}_{JUDGE}_outputs_500_concepts_{MODEL_SET}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.csv'
                 try:
                     steered, total = readfile(fname)
                     results[method].append((concept, steered, total))

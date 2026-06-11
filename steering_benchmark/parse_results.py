@@ -1,7 +1,7 @@
 """
 Steering Benchmark: Result Parsing
 
-This script evaluates steered generations using GPT-4o as a judge.
+This script evaluates steered generations using GPT-4o (or local Ollama) as a judge.
 It scores how well each generation reflects the target concept.
 
 Usage:
@@ -14,14 +14,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import re
 import csv
-from openai import OpenAI
 import pickle
 import os
 from tqdm import tqdm
 import time
 import random
 
-client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+JUDGE = 'gpt_oss'  # 'gpt_oss' (local Ollama) or 'gpt4o' (OpenAI API); also determines output filenames
 
 # Model-specific tags for parsing responses
 ASSISTANT_TAGS = {
@@ -87,6 +86,8 @@ def evaluate_with_gpt4(prompt, max_retries=6):
     Returns:
         GPT-4o response content
     """
+    from openai import OpenAI
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
     for retry_idx in range(max_retries):
         try:
             output = client.chat.completions.create(
@@ -103,6 +104,18 @@ def evaluate_with_gpt4(prompt, max_retries=6):
             sleep_seconds = (2 ** retry_idx) + random.uniform(0, 0.5)
             time.sleep(sleep_seconds)
     raise RuntimeError("OpenAI chat completion failed after retries")
+
+
+def evaluate_with_gpt_oss(prompt):
+    """
+    try to eval prompts using local gpt-oss with ollama
+    should work without max retries
+    """
+    from ollama import chat
+    out = chat(model= 'gpt-oss', messages=[{"role": "user", "content": prompt}], 
+               think='low', options={'temperature': 0., 'num_predict': 500})  # num_predict=20 truncated output mid-reasoning, leaving content empty and all scores 0
+    return out.message.content or ""
+
 
 
 def main():
@@ -132,7 +145,7 @@ def main():
         VERSION_LABEL = '' if VERSION == 1 else f'_v{VERSION}'
 
         for CONCEPT_CLASS in tqdm(CONCEPT_CLASSES):
-            output_csv = f"csvs/{METHOD}_{CONCEPT_CLASS}_gpt4o_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.csv"
+            output_csv = f"csvs/{METHOD}_{CONCEPT_CLASS}_{JUDGE}_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.csv"
 
             if os.path.exists(output_csv):
                 print(f"Skipping {output_csv} - already exists")
@@ -146,7 +159,7 @@ def main():
             results = pickle.load(open(file_path, 'rb'))
 
             # Load existing cache for resume support
-            outputs_cache_path = f"cached_outputs/{METHOD}_{CONCEPT_CLASS}_gpt4o_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.pkl"
+            outputs_cache_path = f"cached_outputs/{METHOD}_{CONCEPT_CLASS}_{JUDGE}_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.pkl"
             try:
                 outputs = pickle.load(open(outputs_cache_path, 'rb'))
                 if not isinstance(outputs, dict):
@@ -172,14 +185,13 @@ def main():
                     prompt_template = load_prompt(CONCEPT_CLASS, VERSION)
                     prompt = prompt_template.format(personality=personality, parsed_response=parsed_response)
 
-                    content = evaluate_with_gpt4(prompt)
+                    if JUDGE == 'gpt4o':
+                        content = evaluate_with_gpt4(prompt)
+                    else:
+                        content = evaluate_with_gpt_oss(prompt)
 
-                    score = 0
-                    if "Score: " in content:
-                        try:
-                            score = int(content.split("Score: ")[1][0])
-                        except (IndexError, ValueError):
-                            score = 0
+                    m = re.search(r"Score:\s*\**\s*([01])", content)
+                    score = int(m.group(1)) if m else 0
                     best_score = max(score, best_score)
 
                 print(f"{personality} - Best score: {best_score}")
@@ -192,7 +204,7 @@ def main():
             # Write final CSV
             with open(output_csv, "w", encoding="utf-8", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["GPT-4o responses"])
+                writer.writerow([f"{JUDGE} responses"])
                 writer.writerows(outputs.items())
 
 
