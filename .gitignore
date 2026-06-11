@@ -3,3 +3,6 @@ directions*/
 cached_outputs*/
 csvs*/
 *.pkl
+__pycache__
+.claude
+
