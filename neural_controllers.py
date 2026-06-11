@@ -101,6 +101,7 @@ class NeuralController:
         self.toolkit = TOOLKITS[control_method]()
         self.signs = None
         self.detector_coefs = None
+        self.rfm_stats = None
 
         print('Hidden layers:', self.hidden_layers)
         print("\nController hyperparameters:")
@@ -154,8 +155,9 @@ class NeuralController:
                                                            self.hyperparams,
                                                            **kwargs
                                                           )
-        
-    def compute_directions_and_accs(self, 
+        self.rfm_stats = getattr(self.toolkit, 'rfm_stats', None)
+
+    def compute_directions_and_accs(self,
                                     train_data, train_labels, 
                                     test_data, test_labels, 
                                     hidden_layers=None, **kwargs):
@@ -379,6 +381,11 @@ class NeuralController:
             detector_path = os.path.join(path, f'{self.control_method}_{concept}_{model_name}_detector.pkl')
             with open(detector_path, 'wb') as f:
                 pickle.dump(self.detector_coefs, f)
+
+        if self.rfm_stats:  # per-layer fit statistics (RFM only), keyed like the directions file
+            stats_path = os.path.join(path, f'{self.control_method}_{concept}_{model_name}_rfmstats.pkl')
+            with open(stats_path, 'wb') as f:
+                pickle.dump(self.rfm_stats, f)
             
     def load(self, concept, model_name, path='./', composite=False):
         if composite:

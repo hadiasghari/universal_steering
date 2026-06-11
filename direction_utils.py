@@ -437,21 +437,25 @@ def train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams,
             #     best_M = M
             #     best_bw = bw
 
-            u, val_r = rfm.rfm((train_X, train_y), (val_X, val_y), L=bw, reg=reg, num_iters=10, norm=norm)
-            if val_r >= best_r: 
-                best_u = u 
+            u, val_r, ev_frac = rfm.rfm((train_X, train_y), (val_X, val_y), L=bw, reg=reg, num_iters=10, norm=norm)
+            if val_r >= best_r:
+                best_u = u
                 best_r = val_r
                 best_reg = reg
                 best_bw = bw
                 best_norm = norm
+                best_ev_frac = ev_frac
 
             empty_cache()
 
     # print(f'Best RFM loss: {best_loss}, R2: {best_val_r2}, reg: {best_reg}, bw: {best_bw}, acc: {best_acc}')
-    print(f'Best RFM r: {best_r}, reg: {best_reg}, bw: {best_bw}, norm: {best_norm}')
+    print(f'Best RFM r: {best_r}, reg: {best_reg}, bw: {best_bw}, norm: {best_norm}, l1/trace: {best_ev_frac:.3f}')
+
+    stats = {'val_r': best_r, 'reg': best_reg, 'bw': best_bw, 'norm': best_norm,
+             'ev_frac': best_ev_frac}
 
     # return best_M
-    return best_u
+    return best_u, stats
 
 def train_linear_probe_on_concept(train_X, train_y, val_X, val_y, use_bias=False):
     

@@ -24,6 +24,7 @@ class RFMToolkit():
         n_components = hyperparams['n_components']
         directions = {}
         detector_coefs = {}
+        self.rfm_stats = {}  # per-layer RFM fit statistics, keyed like directions
 
         for layer_to_eval in tqdm(hidden_layers):
             hidden_states_at_layer = hidden_states[layer_to_eval].to(device).float()
@@ -33,8 +34,9 @@ class RFMToolkit():
             assert(len(train_X) == len(train_y))
             assert(len(val_X) == len(val_y))
 
-            u = direction_utils.train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams)
-            
+            u, layer_stats = direction_utils.train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams)
+            self.rfm_stats[layer_to_eval] = layer_stats
+
             # Assumes we are using a single direction for RFM for the benchmark
             directions[layer_to_eval] = u.reshape(1, -1)
 

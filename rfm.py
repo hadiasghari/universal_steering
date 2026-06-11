@@ -147,11 +147,14 @@ def get_top_dir_err(X, y, M):
         raise RuntimeError("linalg.eigh failed to converge even with regularization.")
 
     # s, u = torch.lobpcg(M, k=1)
+    ev_frac = (s[0] / torch.diagonal(M).sum()).item()  # λ1/trace: share of AGOP spectrum in top direction
     preds = X @ u
 
     # print(preds, y)
     # print(preds.shape, y.shape)
-    return torch.abs(torch.corrcoef(torch.cat((preds, y), dim=-1).T))[0, 1].item(), u
+    r = torch.abs(torch.corrcoef(torch.cat((preds, y), dim=-1).T))[0, 1].item()
+    return r, u, ev_frac
+
 
 def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
     """
@@ -166,8 +169,10 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
         norm: Whether to normalize inputs
 
     Returns:
-        Tuple of (best_direction, best_correlation) where best_direction is
-        the steering vector and best_correlation is its validation performance
+        Tuple of (best_direction, best_correlation, best_ev_frac) where
+        best_direction is the steering vector, best_correlation is its
+        validation performance, and best_ev_frac is the AGOP λ1/trace ratio
+        (share of the spectrum captured by the top direction) at the best iter
     """
     X_train, y_train = traindata
     X_test, y_test = testdata
@@ -185,6 +190,7 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
 
     best_r = -float('inf')
     best_u = None
+    best_frac = None
 
     for i in range(num_iters):
         X_train_M_applied = X_train @ M
@@ -192,11 +198,12 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
         if sol is None:
             break
 
-        test_r, u = get_top_dir_err(X_test, y_test, M)
+        test_r, u, ev_frac = get_top_dir_err(X_test, y_test, M)
 
         if test_r > best_r:
             best_r = test_r
             best_u = u.clone()
+            best_frac = ev_frac
 
         M = get_grads_2(X_train, X_train, sol, L, M)
         if M.max() > 0:
@@ -205,7 +212,7 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
             print("Warning: M is zero, stopping iterations")
             break
 
-    return best_u, best_r 
+    return best_u, best_r, best_frac
 
 def main():
 
@@ -225,7 +232,7 @@ def main():
     print(X_train.shape, y_train.shape)
 
     start = time.time()
-    best_u, best_r = rfm((X_train, y_train), 
+    best_u, best_r, best_frac = rfm((X_train, y_train),
                  (X_test, y_test),
                  reg=1e-3,
                  L=10,
