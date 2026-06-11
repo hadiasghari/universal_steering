@@ -34,6 +34,7 @@ def main():
     parser = argparse.ArgumentParser(description="Aggregate steering evaluation results")
     parser.add_argument("--model_set", type=str, default='falcon')
     parser.add_argument("--model_version", type=str, default='3')
+    parser.add_argument("--model_size", type=str, default=None)
     args = parser.parse_args()
 
     methods = ['rfm']
@@ -42,12 +43,12 @@ def main():
     # Configure model parameters
     if args.model_set == 'llama':
         MODEL_SET = 'llama'
-        MODEL_VERSION = '3.1'
-        MODEL_SIZE = '70B'
+        MODEL_VERSION = args.model_version if args.model_version != '3' else '3.1'
+        MODEL_SIZE = args.model_size or '70B'
     elif args.model_set == 'falcon':
         MODEL_SET = 'falcon'
         MODEL_VERSION = args.model_version
-        MODEL_SIZE = '10B' if args.model_version == '3' else None
+        MODEL_SIZE = args.model_size or '10B'
     elif args.model_set == 'mistral':
         MODEL_SET = 'mistral'
         MODEL_VERSION = args.model_version
