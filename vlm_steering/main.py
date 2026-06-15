@@ -15,93 +15,17 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import torch
 import numpy as np
-from transformers import (
-    AutoTokenizer, AutoModelForCausalLM,
-    MllamaForConditionalGeneration, AutoProcessor,
-    LlavaForConditionalGeneration
-)
 from utils import harmful_dataset, LLMType
 from neural_controllers import NeuralController
 from generation_utils import extract_image
-from collections import namedtuple
 from PIL import Image
 import utils
+from steering_benchmark.model_loading import LLM, select_llm
 
 SEED = 0
 torch.manual_seed(SEED)
 #torch.cuda.manual_seed(SEED)
 np.random.seed(SEED)
-
-LLM = namedtuple('LLM', ['language_model', 'tokenizer', 'processor', 'name', 'model_type'])
-
-
-def select_llm(model_type):
-    """
-    Load and configure a language model for VLM steering.
-
-    Args:
-        model_type: Model type ('llama', 'gemma', 'llama-vision', 'llava')
-
-    Returns:
-        LLM namedtuple containing the model, tokenizer, processor, and metadata
-    """
-    if model_type == 'llama':
-        model_id = "unsloth/Meta-Llama-3.1-70B-Instruct-bnb-4bit"
-        language_model = AutoModelForCausalLM.from_pretrained(
-            model_id, device_map="auto", 
-        )
-
-        use_fast_tokenizer = "LlamaForCausalLM" not in language_model.config.architectures
-        tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=use_fast_tokenizer, padding_side="left", legacy=False)
-        tokenizer.pad_token_id = 0
-        model_name = "llama_3_70b_it"
-        processor = None
-        llm_type = LLMType.TEXT
-
-    elif model_type == 'gemma':
-        tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-9b-it")
-        language_model = AutoModelForCausalLM.from_pretrained(
-            "google/gemma-2-9b-it",
-            device_map="auto",
-        )
-        model_name = 'gemma_2_9b_it'
-        processor = None
-        llm_type = LLMType.TEXT
-
-    elif model_type == 'llama-vision':
-        model_id = "unsloth/Llama-3.2-90B-Vision-Instruct-bnb-4bit"
-
-        language_model = MllamaForConditionalGeneration.from_pretrained(
-            model_id,
-            device_map="auto",
-            trust_remote_code=True,
-        )
-
-        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", legacy=False)
-        tokenizer.pad_token_id = 0
-        processor = AutoProcessor.from_pretrained(model_id)
-        model_name = 'llama_3_90b_4bit_it'
-        llm_type = LLMType.MULTIMODAL
-
-    elif model_type == 'llava':
-        model_id = "llava-hf/llava-1.5-7b-hf"
-
-        language_model = LlavaForConditionalGeneration.from_pretrained(
-            model_id,
-            torch_dtype=torch.float16,
-            low_cpu_mem_usage=True,
-            device_map="auto",
-            trust_remote_code=True,
-        )
-
-        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", legacy=False)
-        tokenizer.pad_token_id = 0
-        processor = AutoProcessor.from_pretrained(model_id)
-        model_name = 'llava-1.5-7b'
-        llm_type = LLMType.MULTIMODAL
-
-    llm = LLM(language_model, tokenizer, processor, model_name, llm_type)
-    return llm
 
 
 def compute_save_directions(llm, dataset, concept, control_method='rfm'):

@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from steering_benchmark.parse_results import JUDGE
+from steering_benchmark.model_loading import resolve_model_args
 
 
 def readfile(fname):
@@ -32,8 +33,8 @@ def readfile(fname):
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Aggregate steering evaluation results")
-    parser.add_argument("--model_set", type=str, default='falcon')
-    parser.add_argument("--model_version", type=str, default='3')
+    parser.add_argument("--model_set", type=str, default='phi')
+    parser.add_argument("--model_version", type=str, default=None)
     parser.add_argument("--model_size", type=str, default=None)
     args = parser.parse_args()
 
@@ -41,21 +42,8 @@ def main():
     concepts = ['fears', 'personalities', 'moods', 'places', 'personas']
 
     # Configure model parameters
-    if args.model_set == 'llama':
-        MODEL_SET = 'llama'
-        MODEL_VERSION = args.model_version if args.model_version != '3' else '3.1'
-        MODEL_SIZE = args.model_size or '70B'
-    elif args.model_set == 'falcon':
-        MODEL_SET = 'falcon'
-        MODEL_VERSION = args.model_version
-        MODEL_SIZE = args.model_size or '10B'
-    elif args.model_set == 'mistral':
-        MODEL_SET = 'mistral'
-        MODEL_VERSION = args.model_version
-        if args.model_version == 'Small-Instruct-2409':
-            MODEL_SIZE = '7B'
-        elif args.model_version == 'Large-Instruct-2407-4bit':
-            MODEL_SIZE = '120B'
+    MODEL_SET = args.model_set
+    MODEL_VERSION, MODEL_SIZE = resolve_model_args(MODEL_SET, args.model_version, args.model_size)
 
     VERSIONS = [1, 2, 3, 4, 5]
 

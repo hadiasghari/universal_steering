@@ -20,6 +20,8 @@ from tqdm import tqdm
 import time
 import random
 
+from steering_benchmark.model_loading import resolve_model_args
+
 JUDGE = 'gpt_oss'  # 'gpt_oss' (local Ollama) or 'gpt4o' (OpenAI API); also determines output filenames
 
 # Model-specific tags for parsing responses
@@ -121,8 +123,8 @@ def evaluate_with_gpt_oss(prompt):
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Evaluate steered generations with GPT-4o")
-    parser.add_argument("--model_set", type=str, default='mistral')
-    parser.add_argument("--model_version", type=str, default='Large-Instruct-2407-4bit')
+    parser.add_argument("--model_set", type=str, default='phi')
+    parser.add_argument("--model_version", type=str, default=None)
     parser.add_argument("--model_size", type=str, default=None)
     parser.add_argument("--concepts_to_steer", type=str, default='all')
     args = parser.parse_args()
@@ -130,9 +132,8 @@ def main():
     METHOD = 'rfm'
     VERSIONS = [1, 2, 3, 4, 5]
 
-    MODEL_SIZE = args.model_size
     MODEL_NAME = args.model_set
-    MODEL_VERSION = args.model_version
+    MODEL_VERSION, MODEL_SIZE = resolve_model_args(MODEL_NAME, args.model_version, args.model_size)
 
     print(f"Evaluating generations for {MODEL_NAME} {MODEL_VERSION} {MODEL_SIZE}")
 
