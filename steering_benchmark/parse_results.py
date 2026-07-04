@@ -21,6 +21,7 @@ import time
 import random
 
 from steering_benchmark.model_loading import resolve_model_args
+from steering_benchmark.run_config import RUN_TAG  # HA: run tag shared with eval_generations
 
 JUDGE = 'gpt_oss'  # 'gpt_oss' (local Ollama) or 'gpt4o' (OpenAI API); also determines output filenames
 
@@ -148,13 +149,13 @@ def main():
         VERSION_LABEL = '' if VERSION == 1 else f'_v{VERSION}'
 
         for CONCEPT_CLASS in tqdm(CONCEPT_CLASSES):
-            output_csv = f"csvs/{METHOD}_{CONCEPT_CLASS}_{JUDGE}_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.csv"
+            output_csv = f"csvs/{METHOD}_{CONCEPT_CLASS}_{JUDGE}_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}_{RUN_TAG}.csv"
 
             if os.path.exists(output_csv):
                 print(f"Skipping {output_csv} - already exists")
                 continue
 
-            file_path = f'cached_outputs/{METHOD}_{CONCEPT_CLASS}_steered_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.pkl'
+            file_path = f'cached_outputs/{METHOD}_{CONCEPT_CLASS}_steered_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}_{RUN_TAG}.pkl'
 
             os.makedirs('cached_outputs', exist_ok=True)
             os.makedirs('csvs', exist_ok=True)
@@ -162,7 +163,7 @@ def main():
             results = pickle.load(open(file_path, 'rb'))
 
             # Load existing cache for resume support
-            outputs_cache_path = f"cached_outputs/{METHOD}_{CONCEPT_CLASS}_{JUDGE}_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.pkl"
+            outputs_cache_path = f"cached_outputs/{METHOD}_{CONCEPT_CLASS}_{JUDGE}_outputs_500_concepts_{MODEL_NAME}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}_{RUN_TAG}.pkl"
             try:
                 outputs = pickle.load(open(outputs_cache_path, 'rb'))
                 if not isinstance(outputs, dict):

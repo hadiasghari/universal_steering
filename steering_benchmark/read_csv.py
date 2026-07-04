@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from steering_benchmark.parse_results import JUDGE
+from steering_benchmark.run_config import RUN_TAG  # HA: run tag shared with eval_generations
 from steering_benchmark.model_loading import resolve_model_args
 
 
@@ -56,7 +57,7 @@ def main():
         for method in methods:
             results[method] = []
             for concept in concepts:
-                fname = f'csvs/{method}_{concept}_{JUDGE}_outputs_500_concepts_{MODEL_SET}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.csv'
+                fname = f'csvs/{method}_{concept}_{JUDGE}_outputs_500_concepts_{MODEL_SET}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}_{RUN_TAG}.csv'
                 try:
                     steered, total = readfile(fname)
                     results[method].append((concept, steered, total))

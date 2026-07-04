@@ -27,9 +27,9 @@ torch.manual_seed(SEED)
 #torch.cuda.manual_seed(SEED)
 np.random.seed(SEED)
 
-N_COMPONENTS = 3  # HA Top-K: number of top eigenvectors to combine when steering (top-3)
-COMPONENT_WEIGHTING = 'evals'  # HA: 'evals' (eigenvalue-weighted) or 'equal' -- how to combine top-K eigenvectors
-COEF_BEHAVIOR = 'magn'  # default, magn, clamp
+# HA: per-run steering knobs + RUN_TAG live in run_config.py (shared with parse_results/read_csv)
+from steering_benchmark.run_config import (
+    N_COMPONENTS, COMPONENT_WEIGHTING, COEF_BEHAVIOR, TARGET_KEYS, RUN_TAG, print_run_config)
 
 
 #def generate(concept, llm, prompt, image=None, coefs=[0.4], control_method='rfm', max_tokens=100, gen_orig=True):  # HA removing default coefs
@@ -83,10 +83,7 @@ def generate(concept, llm, prompt, image=None, coefs=None, control_method='rfm',
         print(original_output)
 
     outputs = []
-    # target_keys = set(range(-1, -80, -1))
-    #target_keys = {-13, -15, -23}   # HA TEST, BASED ON EXPERIMENTS FOR LLAMA-3.1-8B. 
-    target_keys = {-19}   # set(range(-8, -30, -1))  # depths 3..24 (L -8..-29)
-    _steer_layers = controller.hidden_layers & target_keys
+    _steer_layers = controller.hidden_layers & TARGET_KEYS  # HA: layer set from run_config
     n_steer = len(_steer_layers)  # HA magn: for sqrt(N) count-normalization
     print("Steering layers: ", _steer_layers, "| n =", n_steer)
 
@@ -230,6 +227,8 @@ def main():
     else:
         raise ValueError(f"Model type {MODEL_TYPE} not supported")
 
+    print_run_config(coefs=COEFS)  # HA: config provenance banner
+
     llm = select_llm(MODEL_TYPE, MODEL_VERSION=MODEL_VERSION, MODEL_SIZE=MODEL_SIZE)
 
     #PROMPT_VERSIONS = [1, 2, 3, 4, 5]
@@ -258,7 +257,7 @@ def main():
                 subconcepts_to_steer = concepts
 
             os.makedirs('cached_outputs', exist_ok=True)
-            out_file = f"cached_outputs/{METHOD}_{concept_label}_steered_500_concepts_{MODEL_TYPE}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}.pkl"
+            out_file = f"cached_outputs/{METHOD}_{concept_label}_steered_500_concepts_{MODEL_TYPE}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}_{RUN_TAG}.pkl"  # HA: RUN_TAG prevents cross-run cache collisions
 
             # Load existing cache if present
             if os.path.exists(out_file):
