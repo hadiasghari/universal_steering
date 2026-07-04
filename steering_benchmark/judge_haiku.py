@@ -30,12 +30,26 @@ PARSE_MODEL = "llama"                 # key into parse_results.ASSISTANT_TAGS
 
 
 def judge_one(client, prompt, retries=5):
+    if "gpt-oss" in JUDGE_MODEL:  # local ollama backend
+        from ollama import chat
+        for attempt in range(retries):
+            try:
+                r = chat(model=JUDGE_MODEL, messages=[{"role": "user", "content": prompt}])
+                content = r["message"]["content"]
+                m = re.search(r"Score:\s*\**\s*([01](?:\.\d+)?)", content)
+                return (int(float(m.group(1)) >= 0.5) if m else 0), content
+            except Exception as e:
+                print(f"ollama error (attempt {attempt}): {e}"); time.sleep(2 ** attempt)
+        return 0, "JUDGE_FAILED"
+    # Claude 5 family: temperature deprecated, thinking blocks precede text -> bigger budget
+    is_c5 = "sonnet-5" in JUDGE_MODEL or "fable" in JUDGE_MODEL
+    kw = {"max_tokens": 1500} if is_c5 else {"max_tokens": 200, "temperature": 0}
     for attempt in range(retries):
         try:
             msg = client.messages.create(
-                model=JUDGE_MODEL, max_tokens=200, temperature=0,
+                model=JUDGE_MODEL, **kw,
                 messages=[{"role": "user", "content": prompt}])
-            content = msg.content[0].text
+            content = next((b.text for b in msg.content if getattr(b, "type", "") == "text"), "")
             # judges occasionally emit graded scores ("Score: 0.7"); parse as float, threshold at 0.5
             m = re.search(r"Score:\s*\**\s*([01](?:\.\d+)?)", content)
             return (int(float(m.group(1)) >= 0.5) if m else 0), content
@@ -48,13 +62,17 @@ def judge_one(client, prompt, retries=5):
 
 
 def main():
+    global JUDGE_MODEL
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", required=True)
     ap.add_argument("--classes", default="personalities,moods,places")
     ap.add_argument("--versions", default="1,4")
     ap.add_argument("--model_name", default=MODEL_NAME_DEFAULT)
     ap.add_argument("--workers", type=int, default=8)
+    ap.add_argument("--judge_model", default=JUDGE_MODEL)
     args = ap.parse_args()
+    JUDGE_MODEL = args.judge_model
+    judge_slug = "haiku" if "haiku" in JUDGE_MODEL else JUDGE_MODEL.split("-")[1]
 
     load_dotenv(Path(__file__).parent.parent / ".env")
     client = anthropic.Anthropic()  # ANTHROPIC_API_KEY from env
@@ -91,7 +109,7 @@ def main():
 
         print(f"[v{version}] TOTAL: {grand_steered}/{grand_n} "
               f"({100*grand_steered/max(grand_n,1):.1f}%)  judge={JUDGE_MODEL}")
-        out = f"{args.dir}/haiku_judgments{vlabel}.json"
+        out = f"{args.dir}/{judge_slug}_judgments{vlabel}.json"
         json.dump(all_judg, open(out, "w"), indent=1)
         print(f"saved {out}")
 
