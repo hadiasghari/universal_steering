@@ -59,6 +59,15 @@
 \item [?] Process lesson: three config-state incidents (stale judge CSVs, judge-cache pickles, stale coefficient list) share one root cause --- hand-set knobs without provenance. Fix: auto-derive coefficient grids from saved per-layer stats; encode a run tag in artifact filenames.
 \end{outline}
 
+\section{Appendix E: Judge selection and validation}
+\begin{outline}
+\item [+] Judge shootout on a fixed 360-item set (the pilot all-layer run's generations, v1+v4): local gpt-oss:20b 26/45 (v1), pod gpt-oss:20b 27/45, Claude Sonnet~5 26/45 --- with \emph{identical} per-class breakdowns for local-oss and Sonnet (10/15/1). Judge is reproducible across machines and agrees with an independent frontier model.
+\item [--] Claude Haiku 4.5 is a systematically \emph{strict outlier} (13/45 v1; moods 15$\to$5): of 49 disagreements with Sonnet, 48 are one-directional (Haiku under-credits). Cause: it enforces fluency/coherence as a hard criterion, failing fragmented-but-clearly-on-concept outputs. Rejected --- and a useful demonstration that judge choice can move absolute rates $\sim$2$\times$ while the class structure survives.
+\item [+] Primary-judge validation numbers (gpt-oss vs.\ Sonnet, $n{=}360$): agreement 86.7\%/90.6\% (v1/v4), Cohen's $\kappa = 0.72/0.78$ --- substantial agreement. Artifacts: \texttt{oss\_judgments*.json}, \texttt{sonnet\_judgments*.json}, \texttt{haiku\_judgments*.json} (per-concept, per-coefficient scores).
+\item [?] Planned for the confirmatory study: (a) re-validate on $\sim$200 items drawn from the \emph{WordNet} generations (the banked set covers only the 3 pilot classes; the 24-supersense distribution is broader); (b) human spot-check of the gpt-oss/Sonnet \emph{disagreements} ($\sim$25 items) to anchor the consensus against human judgment.
+\item [+] Practical: gpt-oss:20b runs on the experiment GPU (ollama, 100\% GPU, $\sim$1.5\,s/judgment) --- judging the full study costs GPU-hours, not API credits.
+\end{outline}
+
 % ============================================================
 % PARKED (record / follow-up material; not for submission)
 % ============================================================
