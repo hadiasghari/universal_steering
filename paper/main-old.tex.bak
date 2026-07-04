@@ -1,0 +1,200 @@
+% ============================================================
+% BlackboxNLP 2026 submission — working draft
+%
+% Build: pdflatex main / latexmk -pdf main
+% NOTE: currently plain article class for drafting. Before submission,
+% switch to the official ACL style: \documentclass[11pt]{article} +
+% \usepackage{acl} from https://github.com/acl-org/acl-style-files
+% (BlackboxNLP uses the ACL template).
+%
+% Convention: argument structure lives in \outline{} bullets.
+% Hadi converts bullets to prose; bullets stay (commented) until their
+% section is written. Claude maintains structure, refs, and numbers.
+% ============================================================
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{amssymb}  % \gtrsim etc.
+\usepackage{natbib}
+\usepackage[normalem]{ulem}  % \sout{...} for striking superseded text (convention: never delete, strike)
+
+% outline bullets render gray so they're visually distinct from prose;
+% delete or comment out as sections get written
+\newenvironment{outline}{\color{gray!70!black}\begin{itemize}[leftmargin=1.2em,itemsep=1pt]}{\end{itemize}\color{black}}
+
+\title{Not Every Concept Is a Direction:\\
+Concreteness and Polysemy Predict the Steerability of Lexicalized Concepts
+\thanks{Working title. Alternatives: ``Which Concepts Fit in One Dimension?'';
+``The Linguistic Structure of Concept Dimensionality in LLMs''.}}
+\author{Hadi Asghari \and ...}
+\date{Draft of \today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+% --- Prose draft (Hadi, july3; revised by Claude — keep tone) ---
+% Steering vectors are widely used to control and interpret LLMs, yet benchmarks show that
+% some concepts steer reliably while others barely respond --- a variance that is reported but
+% rarely explained. In this research we investigate which kinds of concepts are steerable in
+% Llama-3.1-8B and Gemma-2-9B. We use the RFM method to extract steering vectors for ~400
+% concepts drawn from 24 WordNet supersense categories, and validate which of them successfully
+% steer the model. We then build a regression model explaining steerability from concept
+% category, concreteness, polysemy, and word frequency, as well as the share of the top
+% eigenvector during extraction ($\lambda_1$/trace) --- a zero-cost signal available before any
+% steering is run. [RESULTS SENTENCE HERE once confirmatory numbers are in.] The results help
+% distinguish concepts that behave as single directions --- ``primitive'' for the model --- from
+% those that are composite or context-dependent, and offer practitioners an extraction-time
+% indication of when single-vector steering can be trusted.
+% NB: concept count settled july3 at ~400 = tiered (15/supersense base, ~24 in six featured
+% supersenses: location, person, feeling, artifact, cognition, food) -- matches Section 3.
+% ----------------------------------------------------------------
+\begin{outline}
+\item Representation-engineering methods steer LLMs by adding a single concept vector (top eigenvector / PCA-1) to the residual stream.
+\item Benchmarks report per-concept steering success ranging from near-noise to 90\% --- variance that is reported but never explained.
+\item \sout{Hypothesis: concepts differ in representational dimensionality; single-vector methods structurally fail on concepts encoded as subspaces.} \textbf{UPDATE-july3 (simplified arc):} no single-mechanism headline --- the study is descriptive--explanatory: \emph{which kinds of concepts are steerable}, explained by a regression on concept properties; spectral metrics ($\lambda_1$/trace, $\lambda_1/\lambda_2$) enter as candidate predictors only. See prose draft above.
+\item We build a principled inventory of $\sim$600 lexicalized concepts (WordNet supersenses $\times$ psycholinguistic norms) and measure (a) the spectral concentration ($\lambda_1$/trace) of each concept's extracted representation and (b) its steering success on Llama-3.1-8B and Gemma-2-9B.
+\item Headline findings: concreteness ($\rho \approx .7$ in pilot) and polysemy --- not frequency --- predict spectral concentration; concentration predicts steering success a priori; \sout{steering with top-$k$ eigenvectors rescues low-concentration concepts (causal evidence)}. \textbf{UPDATE-july3:} the rescue is redesigned --- top-$k$ at one layer does \emph{not} rescue under the released contrast (the extra components are contrast artifacts, tested in pilot); the causal test becomes \emph{within-category contrast} extraction (see R4).
+\item \sout{\textbf{UPDATE (second axis, under consideration).} A concept may be characterized by \emph{two} axes: its \emph{compositional basis} --- how many basis directions it is composed of (the dimensionality axis above, $\lambda_1$/trace, restated in basis terms) --- and its \emph{abstraction-depth} --- the first layer at which it can be steered. See Introduction.} \textbf{UPDATE-july3:} two-axis framing demoted to a Discussion thread (Appendix~Z).
+\item \textbf{UPDATE-july3 (kept, relocated).} The coherence$\times$identity$\times$consumption factorization of steering success, and $\lambda_1$/trace as \emph{context-invariance of the extracted signature}, move to Pilot diagnostics and Discussion --- they are interpretation, not the abstract's thesis.
+\end{outline}
+\end{abstract}
+
+\section{Introduction}
+\begin{outline}
+\item Hook: steering/RePE papers throw heterogeneous concept lists at models; some concepts steer at 90\%, others at chance. The variance is treated as noise; we argue it is signal.
+\item The implicit assumption of top-1 eigenvector / PCA-1 / difference-of-means steering: the concept is representable as \emph{one direction}.
+\item Existing evidence that not all features are one-dimensional (Engels et al.; conceptors) --- but no one has asked \emph{which} concepts are one-dimensional, or whether this aligns with human semantic structure.
+\item Our question: is concept dimensionality systematic and predictable from the linguistic properties of the word --- and does it explain steering failure?
+\item Contributions (numbered):
+  \begin{itemize}
+  \item C1: a principled, reusable concept inventory --- $\sim$600 lexicalized concepts stratified over WordNet supersenses, annotated with concreteness, polysemy, AoA, frequency.
+  \item C2: spectral concentration ($\lambda_1$/trace of the AGOP) as a zero-cost, extraction-internal predictor of steerability; comparison against probe accuracy (saturated, uninformative).
+  \item C3: psycholinguistic correlates: concreteness $\gg$ polysemy $\gg$ frequency $\approx$ 0 --- frequency is \emph{not} the driver, contra the simple exposure story.
+  \item C4: causal test --- \sout{top-$k$ eigenvector steering rescues concepts that top-1 fails on, confirming dimensionality (not extraction noise) as the mechanism.} \textbf{UPDATE-july3:} within-category contrast extraction (negatives = same frame, different concept) rescues concepts whose persona-contrast direction is parent-dominated; top-$k$ under the released contrast was tested in the pilot and does \emph{not} rescue --- components 2--3 are shared frame/roleplay axes, $\geq$90\% identical across cities.
+  \item C5: replication across two model families (Llama, Gemma); size comparison (8B vs.\ 70B) as secondary evidence.
+  \end{itemize}
+\item Forward pointer: all code, inventory, and per-concept statistics released.
+\item \textbf{UPDATE (two-axis extension).} \textbf{[STRUCK-july3: demoted to a Discussion thread / Appendix Z; kept below for the record.]} Beyond \emph{whether} a concept is one direction, two distinct axes characterize it:
+  \begin{itemize}
+  \item \textbf{Axis B --- compositional basis} (within-layer): \emph{how many basis directions the concept is composed of} --- one for an atomic/primitive concept, several for a composite one. This is the paper's existing dimensionality axis ($\lambda_1$/trace; top-$k$ rescue) restated in basis language: high concentration $\approx$ a single basis vector, low concentration $\approx$ a multi-vector basis. (We adopt ``compositional basis'' over ``rank''/``dimensionality'' as the clearer term.)
+  \item \textbf{Axis A --- abstraction-depth} (cross-layer): the \emph{first layer at which the concept can be steered}. Hypothesised to track taxonomic generality --- superordinate/abstract concepts steerable shallower, subordinate/specific ones deeper (cf.\ ROME: subject-specific content reaches the read token only late).
+  \end{itemize}
+  Candidate C6: the two axes are conceptually orthogonal (basis size vs.\ depth) but empirically confounded across broad classes; their independence is a \emph{within-category} question (Results, Discussion).
+\item \textbf{UPDATE-july3 (pilot mechanism).} Attribute concepts (moods) steer from a \emph{single mid layer} (15/15 at depth 13); instance identities (places) steer only under \emph{all-layer} injection and then reach region-level granularity (near-misses: Edinburgh$\to$Dublin pub, Austin named exactly) --- consistent with multi-stage assembly: per-layer instance-residue accumulation + late-layer lexical tipping + autoregressive bootstrap once the name is emitted. Single-layer sufficiency is thus a measurable concept property (see Method, two-config protocol).
+\item \textbf{UPDATE-july3 (final arc, one line per stage).} Phenomenon: per-concept steering variance is reported but unexplained $\to$ Inventory: $\approx$400 concepts, 24 WordNet supersenses, dual extraction contrasts $\to$ Protocol: two-config steering (all-layer + single mid layer), granularity outcome $\to$ Regression: category, concreteness, polysemy, frequency + spectral metrics as candidate extraction-internal predictors $\to$ Interpretation from pilot ($N{=}30\times3$): parent-dominance (what single-vector steering delivers) and coherence$\neq$identity (why spectral predictors are conditional) $\to$ Causal probe: within-category rescue. Two-axis framing and localization diagnostics parked (Appendix~Z).
+\end{outline}
+
+\section{Background and Related Work}
+\begin{outline}
+\item \textbf{Linear representation hypothesis and steering.} Park et al.; RepE (Zou et al.); CAA (Panickssery et al.); ActAdd (Turner et al.); the RFM/universal-steering benchmark we build on (Beaglehole et al.\ 2026) --- recap of method: kernel ridge + AGOP metric learning, top eigenvector as steering vector.
+\item \textbf{Multi-dimensional features.} Engels et al.\ (not all features are one-dimensionally linear; circular features); feature splitting in SAEs; conceptors / subspace steering (Postmus \& Abreu; compositional affine steering) --- subspace methods beat single vectors precisely where concepts are multi-dimensional.
+\item \textbf{Predicting steerability.} LAP / logit-lens accessibility (Billa 2026); ``When is your LLM steerable?''; (un)reliability of steering vectors (directional agreement, separability). Position our wedge: these are engineering predictors; none ask about the linguistic structure of which concepts are 1-D.
+\item \textbf{Frequency and linear representations.} On linear representations and pretraining frequency (co-occurrence thresholds); long-tail knowledge (Kandpal et al.). Sets up the frequency hypothesis we then \emph{reject} empirically.
+\item \textbf{Psycholinguistic norms in NLP.} Brief: concreteness/AoA norms used for grounding, interpretability probes.
+\item Gap statement: no work connects concept-level semantic structure (concreteness, polysemy, taxonomic class) to representational dimensionality and steering outcome.
+\item \textbf{UPDATE-july3 (causal-identification lineage).} Add as complement to contrast-based extraction: function vectors selected by causal mediation (Todd et al.\ 2024), linear relation embeddings (Hernandez et al.\ 2024), ROME/MEMIT weight edits (Meng et al.) --- identification \emph{by intervention} vs.\ our identification \emph{by experiment design}. Engels et al.\ additionally covers concepts that are not global directions at all (circular/multi-dimensional features).
+\end{outline}
+
+\section{Defining and Sampling Concepts}
+\begin{outline}
+\item \textbf{Operational definition.} Sidestep the philosophical debate (Murphy 2002; Margolis \& Laurence 1999): a \emph{lexicalized concept} = a meaning a speech community assigned a word to, operationalized as a WordNet synset; each word mapped to its dominant (first) noun sense.
+\item \textbf{Inventory.} All single-word, noun-dominant lemmas from WordNet; category = supersense (26 lexicographer files; Miller 1990; Fellbaum 1998; ``supersense'' usage: Ciaramita \& Johnson 2003).
+\item Exclusions: \texttt{noun.Tops} (hypernym roots; steering toward ``entity'' is ill-posed); POS-ambiguous lemmas filtered via dominant-POS + presence in norm lists; small cells (\texttt{motive}, \texttt{relation}) sampled exhaustively ($\sim$10--15) and flagged.
+\item \textbf{Stratified sample.} $\sim$25 concepts $\times$ $\sim$22 usable supersenses $\approx$ 550--600; within each supersense, stratify over frequency so category and frequency are not confounded.
+\item \textbf{Predictors} (one table): Zipf frequency (wordfreq); concreteness (Brysbaert et al.\ 2014); age of acquisition (Kuperman et al.\ 2012); polysemy (\#WordNet senses); taxonomic depth; supersense; log category size as covariate.
+\item Pilot/confirmatory split: the 204 benchmark concepts (Beaglehole et al.) on which the effect was first observed serve as pilot only; the WordNet sample is the confirmatory set, untouched during exploration.
+\item \sout{\textbf{UPDATE (predictors to axes).} \emph{Taxonomic depth}, listed above as a covariate, is promoted to the ground-truth predictor for \textbf{Axis A} (abstraction-depth): does a hypernym steer shallower than its hyponyms? \emph{Concreteness} and \emph{polysemy} remain the predictors for \textbf{Axis B} (compositional basis size).} \textbf{UPDATE-july3:} taxonomic depth returns to covariate status; the axes framing is parked (Appendix~Z).
+\item \textbf{UPDATE (sample size, under review).} \textbf{[SUPERSEDED-july3 by the final tiered bullet below.]} The $\sim$25/supersense ($\approx$600) target may be cut for workshop scope. Recommendation: \sout{$\sim$10/supersense ($\approx$240), \emph{not} 5 ($\approx$120)} \textbf{15/supersense} ($\approx$330--360, depending on the final count of usable supersenses; $24 \times 15 = 360$). The headline between-concept correlations (concreteness $\to$ basis size; basis size $\to$ steering) are well-powered even at 120, but the within-supersense analyses --- deconfounding category, frequency stratification, and the Axis-A/Axis-B independence test --- need $\gtrsim$10 per cell; 15 clears that floor with margin for exclusions (judge failures, prompted-ceiling misses).
+\item \textbf{UPDATE-july3 (sample size, final --- supersedes the flat-15 recommendation above).} Tiered allocation, $\approx$\textbf{400} concepts total: base \textbf{15/supersense} across all $\sim$24 usable supersenses, \textbf{oversampled to $\approx$24} in six \emph{featured} supersenses pre-specified on hypothesis grounds before extraction: \texttt{location}, \texttt{person}, \texttt{feeling} (pilot continuity --- places/personalities/moods) and \texttt{artifact}, \texttt{cognition}, \texttt{food} (concreteness extremes for R2). Featured cells carry the within-category analyses and absorb attrition (prompted-ceiling/judge exclusions); non-featured cells serve only the pooled regressions, where per-cell $n$ is not load-bearing.
+\item \textbf{UPDATE-july3 (contrast design --- the pilot's central lesson).} The released persona-vs-neutral contrast perfectly confounds frame, category-affection, and instance (all three co-occur in every positive), so no statistical method can separate them; pilot top-3 AGOP components are $\geq$90\% shared across cities. Fixes: (a) one frame felicitous across \emph{all} supersenses (e.g.\ ``You are fascinated by \{concept\}''; ``adopt a \{concept\} tone'' fails outside attribute categories and would confound frame felicity with category); (b) \emph{dual negatives}: (i) bare question (benchmark-comparable), (ii) same frame with a \emph{different concept} --- free, since those prompts are other concepts' positives --- which cancels the frame axis, and with same-supersense negatives also the parent.
+\end{outline}
+
+\section{Method}
+\begin{outline}
+\item \textbf{Direction extraction (RFM).} Recap: per layer, kernel ridge regression on concept-vs-random prompts; AGOP $M$; steering vector = top eigenvector of $M$. Extraction on Llama-3.1-8B-Instruct and Gemma-2-9B-it (70B-4bit as secondary if cluster time allows).
+\item \textbf{Spectral concentration.} $\lambda_1/\mathrm{tr}(M)$: share of the AGOP spectrum captured by the top direction; per-concept score = mean over layers.
+\item \textbf{Fixed hyperparameters --- a methodological requirement, not a convenience.} Show mechanically that kernel bandwidth inflates $\lambda_1$/trace (large $L$ $\Rightarrow$ near-linear fit $\Rightarrow$ near-constant gradients $\Rightarrow$ rank-1 AGOP); grid search over near-tied validation correlations therefore injects artifact variance into the dependent measure. All extractions at the modal setting (bw=1, norm=True, reg=1e-3); robustness appendix: rank stability across bandwidths on a subsample.
+\item \textbf{Steering protocol.} \sout{Unit-norm vector added at all layers; fixed coefficient grid (3--4 values spanning the per-model calibrated range; coefficients reported relative to mean residual-stream norm)} \textbf{UPDATE-july3:} superseded by the two-config protocol below. Kept: 3 category-neutral prompts (open-canvas; listed verbatim); greedy decoding.
+\item \textbf{Outcome.} Fraction of (coef $\times$ prompt) cells judged as expressing the concept (graded 0--12); explicitly \emph{not} max-over-coefficients (inflation argument); dose--response curves as secondary descriptive output.
+\item \textbf{Judge.} Claude Haiku 4.5 via Batch API; symmetric judge question across supersenses; validation: dual-judge agreement (vs.\ GPT-OSS) on $n=200$ + human spot-check of disagreements ($\kappa$ reported).
+\item \textbf{Controls.} Prompted ceiling (can the model express the concept when explicitly asked?) --- steerability analyzed conditional on ceiling; pipeline sanity-checked on known-good concepts per model (Falcon/Phi cautionary tale, one sentence or footnote).
+\item \textbf{UPDATE-july3 (two-config steering protocol).} Each concept steered under (i) \emph{all layers}, benchmark defaults (unit vectors, released coefs --- comparability) and (ii) \emph{one mid layer} (depth $\approx$40\%; vector scaled by the concept's empirical projection gap, cf.\ CAA mean-difference magnitude / ITI $\sigma$-scaling; effective single-site dose $\approx$1$\times$ local residual-stream norm). $\Delta$(all $-$ single) measures \emph{distributedness} and operationalizes Axis~A at 2$\times$ compute instead of a per-layer sweep. Cell taxonomy: steers-both (attribute-like), steers-all-only (assembly-requiring), steers-neither.
+\item \textbf{UPDATE-july3 (secondary outcome).} Graded \emph{granularity reached} (category / region / instance) alongside the binary judge --- the binary criterion flattens near-misses (pilot: Edinburgh$\to$``Scottish Highlands'' with Scots dialect scores 0), and granularity is the variable the mechanism actually moves.
+\item \textbf{UPDATE-july3 (sampling note).} Six featured supersenses (\texttt{location}, \texttt{person}, \texttt{feeling}, \texttt{artifact}, \texttt{cognition}, \texttt{food}) are extracted at $n\approx24$ vs.\ 15 elsewhere ($\approx$400 total); the featured list was pre-specified before extraction (pilot continuity + concreteness extremes), so within-category analyses on these cells are confirmatory, not post hoc.
+\end{outline}
+
+\section{Pilot diagnostics and protocol selection\\ {\normalsize (UPDATE-july3: renamed; was ``Initial experiments for setting hyper-parameters'' --- now also carries the pilot findings that interpret the Results)}}
+\begin{outline}
+\item \textbf{Goal.} Choose the extraction configuration (bandwidth, normalization, contrastive construction, iteration readout, analysis band, spectral metric) for the full run by checking, on a diverse probe set, which settings yield a $\lambda_1$/trace that is \emph{stable}, \emph{discriminative} across concepts, and \emph{predictive} of concreteness/polysemy --- without degrading steering quality.
+\item \textbf{Probe set.} 24 concepts, one per WordNet supersense (median-frequency representative; concreteness spans 1.46--4.77), on Llama-3.1-8B.
+\item \textbf{Fixed during the sweep.} $\mathrm{reg}=10^{-3}$; 100 statements per pole; 12 RFM iterations; analysis band = decoder depth 4--24 (band-averaged, per-layer profile retained).
+\item \textbf{Swept factors.} bandwidth $L\in\{1,10\}$; normalization $\in\{$unit-norm, raw$\}$; contrastive construction $\in\{$same-statement primed-vs-neutral; different-statement, released-style$\}$; iteration readout $\in\{$best-validation-$r$ (released default), final/converged, last-3 mean$\}$. Metrics: $\lambda_1/\mathrm{tr}$, $\lambda_1/\lambda_2$, raw $\lambda_1$, validation $r$.
+\item \textbf{Experiments.}
+  \begin{itemize}
+  \item E1 \emph{Readout stability}: per-concept shift in $\lambda_1$/trace between the best-$r$ and converged readouts.
+  \item E2 \emph{Discrimination}: spread (s.d.) of band $\lambda_1$/trace across the 24 concepts, per setting (expectation: $L{=}10$ collapses it toward 0).
+  \item E3 \emph{Semantic signal}: Spearman $\rho$ of band $\lambda_1$/trace vs concreteness and vs polysemy, per setting --- the core hypothesis on diverse concepts.
+  \item E4 \emph{Construction}: same- vs different-statement contrast on E1--E3 (stability/discrimination/signal).
+  \item E5 \emph{Metric}: $\lambda_1$/trace vs $\lambda_1/\lambda_2$ on discrimination and signal.
+  \item E6 \emph{Bandwidth--vector geometry}: per-layer cosine between the $L{=}1$ and $L{=}10$ steering vectors --- does bandwidth rotate the direction or only reshape the spectral tail?
+  \item E7 \emph{Depth profile}: $\lambda_1$/trace and validation $r$ vs depth, to fix the analysis band.
+  \end{itemize}
+\item \textbf{Established by pilot diagnostics (Phase 1).}
+  \begin{itemize}
+  \item Validation $r$ saturates ($\sim0.97$) across bandwidths, statement counts (50/100/200), and after RFM iteration~1 --- so any selection \emph{by} validation $r$ (the released hyper-parameter grid \emph{and} the released iteration choice) is decided by third-decimal noise.
+  \item Consequently the released $\lambda_1$/trace (read at the best-$r$ iteration) is unstable: it samples a value that climbs $0.0002\!\to\!0.17\!\to\!0.46$ across iterations at a noise-chosen point. Reading at convergence cuts the $N{=}100$ vs $200$ swing $3$--$4\times$; we therefore read \emph{both} the steering vector and $\lambda_1$/trace at a fixed (converged) iteration.
+  \item Large bandwidth drives the kernel to global linearity $\Rightarrow$ near-constant gradients $\Rightarrow$ rank-1 AGOP $\Rightarrow$ $\lambda_1$/trace$\to1$ \emph{by construction}; only $L{=}1$ leaves multi-dimensionality detectable. Unit normalization removes the $\sim$20$\times$ inter-layer scale variation, justifying a single bandwidth across layers.
+  \end{itemize}
+\item \textbf{Decision rule.} Adopt the setting maximizing discrimination and $|\rho|$ at the fixed (converged) readout and $L{=}1$; confirm in the steering check (Phase 3) that the chosen vectors steer at least as well as the released best-$r$ and $L{=}10$ vectors. Bandwidth is fixed \emph{per model} (8B$\to$1); cross-model claims are restricted to rankings/correlations rather than absolute $\lambda_1$/trace.
+\item \textbf{Artifacts.} \texttt{hpsweep\_phase2\_metrics.csv}; \texttt{hpsweep\_phase2\_vectors/}; cached \texttt{hpsweep\_phase2\_hidden\_states/}; plus diagnostic pickles for the statement-count and iteration sweeps.
+\item \textbf{UPDATE-july3.} The contrastive-construction factor (E4) is extended with \emph{within-category negatives} (same frame, different concept); $\lambda_1$/trace and its steering-prediction quality to be compared across contrast types --- expectation: the predictor's validity is itself contrast-dependent.
+\item \textbf{UPDATE-july3 (pilot diagnostics --- the section's second half; $N{=}30\times3$, one sample).} All reported pilot experiments use the same 90-concept sample (places/moods/personalities; directions in \texttt{direction3e}); interim $n{=}15$ shakedown runs are superseded and unreported --- behavioral arms to be re-run at $N{=}90$ (extraction already done; generation+judging only). Three findings carried into the main text:
+  \begin{itemize}
+  \item \emph{Parent-dominance.} Same-category concepts' extracted top-1 directions are nearly identical (places: cos $0.97\to0.84\to0.72$ across depth; all top-3 components $\geq$0.90 shared); the single-layer dose-response saturates at the category \emph{prototype} with region-level near-misses (Edinburgh$\to$Dublin); giving secondary components mass injects a generic roleplay axis. Three independent legs; one figure (\texttt{parent\_share\_by\_depth.png}). Interpretation: what single-vector steering delivers is mostly the category, because the contrast cannot statistically separate what always co-occurs.
+  \item \emph{Coherence $\neq$ identity.} Places show the highest band $\lambda_1$/trace yet fail single-layer steering while moods (lower) succeed: spectral metrics certify that a \emph{coherent} direction was extracted, not that it is the \emph{judged content} --- hence their regression coefficients are expected to be conditional on contrast type. (Numbers to be finalized on the $N{=}90$ re-run.)
+  \item \emph{Protocol justifications} (one line each): single mid layer at $\approx$40\% depth --- wide behavioral window there, token-bias-then-collapse at 60\%; no top-$k$ arms --- the top-3 subspace is contrast-shared; coefficient $\approx$1$\times$ local residual norm via per-layer magn scaling (cf.\ CAA/ITI); granularity as secondary outcome --- the binary judge flattens near-misses.
+  \end{itemize}
+\end{outline}
+
+\section{Results}
+\begin{outline}
+\item \textbf{R1: Concept dimensionality is systematic.} $\lambda_1$/trace varies widely across concepts (pilot: 0.53--0.79 on Llama) and clusters by supersense: feelings/states low, concrete artifacts/organisms/professions high. Figure: per-supersense distribution.
+\item \textbf{R2: Psycholinguistic predictors.} Regression of $\lambda_1$/trace on concreteness, polysemy, AoA, Zipf, depth (+ category size). Pilot: concreteness $\rho = .74$, polysemy $\rho = -.49$, frequency $\rho \approx -.10$. Frequency null is a finding: exposure alone does not buy one-dimensionality.
+\item \textbf{R3: \sout{Concentration predicts steering success} UPDATE-july3: spectral metrics as candidate predictors.} Per-concept steering score vs.\ $\lambda_1$/trace and $\lambda_1/\lambda_2$ \emph{within the full regression} (category, concreteness, polysemy, frequency), with validity compared across the two contrast types; controlling for prompted ceiling and val-$r$ (saturated $\Rightarrow$ cannot explain variance). Comparison with simple baselines (frequency alone, category alone).
+\item \textbf{R4: The rescue experiment (causal).} \sout{For low-concentration concepts that fail top-1 steering: steer with top-$k$ eigenvectors ($k$ from spectrum); recovery rate vs.\ matched high-concentration controls. Interference noise would not be rescued; a genuine subspace is.} \textbf{UPDATE-july3:} redesigned --- the pilot falsified top-$k$-at-one-layer under the released contrast (components 2--3 are shared frame/roleplay axes; equal weighting \emph{dilutes}: moods 15$\to$10; eigenvalue weighting $\approx$ top-1). New rescue: \emph{within-category contrast} extraction (``loves Edinburgh'' vs.\ ``loves \{other city\}''), steered at one mid layer. Success $\Rightarrow$ the failure was extraction addressing (contrast design); failure $\Rightarrow$ instance identity is not single-site injectable even when cleanly extracted (multi-stage assembly).
+\item \textbf{R5: Generality.} Llama vs.\ Gemma consistency (per-concept correlation of both $\lambda_1$/trace and steering success across models); 8B vs.\ 70B as secondary/descriptive (confound caveat).
+\item \sout{\textbf{UPDATE --- R6 (planned): abstraction-depth (Axis A).} Per-concept \emph{first-steerable-depth} measured by single-layer steering across a depth grid; test against taxonomic depth (hypernyms shallower) and, \emph{within} supersense, independence from Axis B ($\lambda_1$/trace). Between classes the axes are confounded --- affective concepts are both more composite \emph{and} earlier-steering (moods steer at depth$\sim$9, places at $\sim$17+) --- so the independence test must be within-category.} \textbf{UPDATE-july3:} demoted --- $\Delta$(all-layer $-$ single-layer) from the two-config protocol replaces the depth sweep, reported \emph{descriptively}, not as a second thesis; the full axis idea is parked (Appendix~Z).
+\item \textbf{UPDATE --- caveat (pilot).} First-steerable-depth is a \emph{write} property and cannot be read off extraction geometry: on the 90-concept pilot, cross-layer eigenvector proxies (top-1 rotation; alignment-to-deep) are concept-invariant ($\sim$17--20) and fail the steering ground truth, because a concept's early steering direction is $\sim$orthogonal ($\cos\approx0.05$) to its late one. Axis A must be measured by steering, not by spectra. \texttt{nb\_axes.ipynb}.
+\item \textbf{UPDATE-july3 (predictor caveat).} Pilot inversion: places have the \emph{highest} band $\lambda_1$/trace yet steer 0/15 at a single mid layer, while moods (lower $\lambda_1$/trace) steer 15/15 --- the metric certifies \emph{coherence} of the extracted blend, not its \emph{identity}. R3's prediction quality is therefore expected to be contrast-dependent; test under both contrast types.
+\end{outline}
+
+\section{Discussion}
+\begin{outline}
+\item What makes a concept one-dimensional: concrete, monosemous, taxonomically tight --- consistent with a picture where abstract/affective concepts are encoded as bundles of features rather than single axes.
+\item Superposition is orthogonal: near-orthogonal packing means there is no capacity argument forcing compositeness; low $\lambda_1$/trace could in principle reflect interference, but the rescue experiment separates the two.
+\item Vignette: compositional concepts --- is direction(``strict father'') $\approx \alpha\,$direction(``strict'') $+ \beta\,$direction(``father'')? (two notions of composite: subspace vs.\ conjunction; keep distinct).
+\item Practical implications for RePE: report spectral concentration alongside steering benchmarks; use subspace methods (conceptors, top-$k$) for low-concentration concepts; concept inventories should be stratified, not ad hoc.
+\item \textbf{UPDATE (two-axis view).} \textbf{[july3: retained as a Discussion \emph{thread} only --- not a claim of the paper; details parked in Appendix~Z.]} A concept is then characterized by a pair: (\emph{abstraction-depth}, \emph{compositional basis size}) --- a vertical coordinate (where in the stack it is computed / becomes steerable) and a horizontal one (how many basis directions compose it). Orthogonal in principle, confounded across broad classes, separable only within category. The basis-size reading is exactly the ``subspace'' sense of composite (distinct from the ``conjunction'' sense above).
+\item \textbf{UPDATE-july3 (what $\lambda_1$/trace is).} Reframe: an \emph{intervention-match score} --- how well the concept's natural activation signature fits the only move single-vector steering can make (one constant vector, all contexts). Mechanism for R2: concrete concepts express context-invariantly (rank-1 signature) $\Rightarrow$ compatible with the intervention; abstract concepts express context-dependently $\Rightarrow$ a constant vector is a rank-1 approximation of a rank-$k$ phenomenon.
+\item \textbf{UPDATE-july3 (status of extracted vectors).} The residual stream has no privileged basis (any rotation is absorbable into reader/writer weights), so extracted directions are \emph{experiment-relative} coordinates: within-model relational claims (cosines, subspace overlaps, across concepts and layers) are gauge-invariant and valid; coordinate-level claims and raw cross-model comparisons are not. Anchored spaces --- embedding/unembedding (token identity; cf.\ Park's constructed causal inner product) and MLP-neuron space (elementwise nonlinearity; cf.\ Geva's SNMF and region-based decompositions) --- are where the mechanism itself pins a frame.
+\item \textbf{UPDATE-july3 (identification).} Two routes to pin a vector's identity: \emph{experiment design} (contrasts that vary exactly one thing) vs.\ \emph{causal mediation} (keep only what demonstrably causes the behavior; function vectors, ROME). Pipeline: propose by contrast, accept by causal test --- the two-config steering protocol is a crude instance.
+\end{outline}
+
+\section{Limitations}
+\begin{outline}
+\item Two model families, single method (RFM) for extraction --- $\lambda_1$/trace is AGOP-specific; PCA explained-variance as a cross-check would strengthen (appendix if time).
+\item LLM judge (validated but imperfect); English only; dominant-sense assumption; norms are human ratings with their own biases.
+\item Correlational core with one causal probe; dimensionality vs.\ extraction-difficulty not fully separable outside the rescue design.
+\end{outline}
+
+% \section*{Ethics Statement}  % required by *ACL if applicable — likely minimal here
+% \section*{Acknowledgments}
+
+\bibliographystyle{acl_natbib} % needs acl-style-files; use plainnat while drafting
+% \bibliography{refs}
+
+\input{appendix_experiments}
+
+\end{document}

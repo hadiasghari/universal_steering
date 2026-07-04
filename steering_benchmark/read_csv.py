@@ -39,13 +39,15 @@ def main():
     args = parser.parse_args()
 
     methods = ['rfm']
-    concepts = ['fears', 'personalities', 'moods', 'places', 'personas']
+    # concepts = ['fears', 'personalities', 'moods', 'places', 'personas']
+    concepts = ['personalities', 'moods', 'places']  # HA FOR TEST
 
     # Configure model parameters
     MODEL_SET = args.model_set
     MODEL_VERSION, MODEL_SIZE = resolve_model_args(MODEL_SET, args.model_version, args.model_size)
 
-    VERSIONS = [1, 2, 3, 4, 5]
+    # VERSIONS = [1, 2, 3, 4, 5]
+    VERSIONS = [1, 4]  # HADI, FOR TEST
 
     for VERSION in VERSIONS:
         VERSION_LABEL = f'_v{VERSION}' if VERSION >= 2 else ''

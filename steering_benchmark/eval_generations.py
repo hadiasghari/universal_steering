@@ -27,8 +27,13 @@ torch.manual_seed(SEED)
 #torch.cuda.manual_seed(SEED)
 np.random.seed(SEED)
 
+N_COMPONENTS = 3  # HA Top-K: number of top eigenvectors to combine when steering (top-3)
+COMPONENT_WEIGHTING = 'evals'  # HA: 'evals' (eigenvalue-weighted) or 'equal' -- how to combine top-K eigenvectors
+COEF_BEHAVIOR = 'magn'  # default, magn, clamp
 
-def generate(concept, llm, prompt, image=None, coefs=[0.4], control_method='rfm', max_tokens=100, gen_orig=True):
+
+#def generate(concept, llm, prompt, image=None, coefs=[0.4], control_method='rfm', max_tokens=100, gen_orig=True):  # HA removing default coefs
+def generate(concept, llm, prompt, image=None, coefs=None, control_method='rfm', max_tokens=None, gen_orig=False):
     """
     Generate steered outputs for a concept with various steering coefficients.
 
@@ -50,26 +55,54 @@ def generate(concept, llm, prompt, image=None, coefs=[0.4], control_method='rfm'
         llm.tokenizer,
         rfm_iters=8,
         control_method=control_method,
-        n_components=1
+        n_components=N_COMPONENTS  # HA Top-K
     )
 
     controller.load(concept=concept, model_name=llm.name, path='directions/')
+
+    # HA Top-K: eigenvalue-weighted, unit-normalized combination of the top-N_COMPONENTS eigenvectors.
+    # Unit-normalizing (not dividing by K) keeps the injected magnitude == K=1, so the same coefs apply.
+    _stats = pickle.load(open(f'directions/{control_method}_{concept}_{llm.name}_rfmstats.pkl', 'rb'))  # HA Top-K
+    for _lyr in list(controller.directions.keys()):  # HA Top-K
+        _U = controller.directions[_lyr][:N_COMPONENTS]  # HA Top-K: (K, d) top eigenvectors
+        if COMPONENT_WEIGHTING == 'evals':  # HA: eigenvalue-weighted
+            _w = torch.tensor(_stats[_lyr]['evals'][:N_COMPONENTS], dtype=_U.dtype, device=_U.device)
+        else:  # 'equal'
+            _w = torch.ones(N_COMPONENTS, dtype=_U.dtype, device=_U.device)
+        _v = (_w[:, None] * _U).sum(0)  # HA Top-K: weighted sum of top-K eigenvectors
+
+        if COEF_BEHAVIOR == 'magn':
+            controller.directions[_lyr] = (_v / _v.norm()) * _stats[_lyr]['magn']  # HA magn: scale by layer's natural concept magnitude -> control_coef is now a multiplier
+        elif COEF_BEHAVIOR == 'clamp':
+            raise ValueError("Clamp behavior is not implemented")
+        else:  # 'default'
+            controller.directions[_lyr] = _v  # HA Top-K: weighted sum of top-K eigenvectors; (normalize  not needed?))
 
     if gen_orig:
         original_output = controller.generate(prompt, image=image, max_new_tokens=max_tokens, do_sample=False)
         print(original_output)
 
     outputs = []
-    target_keys = set(range(-1, -80, -1))
-    print("Steering layers: ", controller.hidden_layers & target_keys)
+    # target_keys = set(range(-1, -80, -1))
+    #target_keys = {-13, -15, -23}   # HA TEST, BASED ON EXPERIMENTS FOR LLAMA-3.1-8B. 
+    target_keys = {-19}   # set(range(-8, -30, -1))  # depths 3..24 (L -8..-29)
+    _steer_layers = controller.hidden_layers & target_keys
+    n_steer = len(_steer_layers)  # HA magn: for sqrt(N) count-normalization
+    print("Steering layers: ", _steer_layers, "| n =", n_steer)
 
     for coef in coefs:
-        print(f"Coeff: {coef} ==========================================================")
+        print(f"Coeff: {coef} {COEF_BEHAVIOR}==========================================================")
+        if COEF_BEHAVIOR == 'magn':
+            coef_eff = coef * (max(n_steer, 1) ** 0.5)  # HA magn: sqrt(N) count-normalization (cross-layer dirs ~orthogonal)
+        elif COEF_BEHAVIOR == 'clamp':
+            raise ValueError("Clamp behavior is not implemented")
+        elif COEF_BEHAVIOR == 'default':
+            coef_eff = coef
         steered_output = controller.generate(
             prompt,
             image=image,
-            layers_to_control=controller.hidden_layers & target_keys,
-            control_coef=coef,
+            layers_to_control=_steer_layers,
+            control_coef=coef_eff,
             max_new_tokens=max_tokens,
             do_sample=False
         )
@@ -172,7 +205,8 @@ def main():
             if MODEL_SIZE == '10B':
                 COEFS = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0]
             elif MODEL_SIZE == '3B':
-                COEFS = [6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0]
+                #COEFS = [6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0] 
+                COEFS = [7.0, 9.0, 11.0, 13.0] # HADI, FOR TEST
     elif MODEL_TYPE == 'phi':
         if MODEL_VERSION == '3-medium-4k-instruct':
             COEFS = [2.0, 2.25, 2.5, 2.75, 3.0]
@@ -180,22 +214,33 @@ def main():
             COEFS = [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
     elif MODEL_TYPE == 'llama':
         if MODEL_SIZE == '8B':
-            COEFS = [0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
+            #COEFS = [0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
+            if COEF_BEHAVIOR == 'default':
+                COEFS = [0.5, 0.6, 0.7, 0.8]  # HA, WORKS ON DEFAULT
+            elif COEF_BEHAVIOR == 'magn':
+                COEFS = [1, 2, 3, 4]  # HA magn
+                # COEFS = [0.5, 1.0, 1.5, 2.0]  # HA magn
+                # COEFS = [4, 6, 8, 10]  # 
+            elif COEF_BEHAVIOR == 'clamp':
+                raise   ValueError("Clamp behavior is not implemented")
         else:
-            COEFS = [0.4, 0.41, 0.42, 0.43, 0.44, 0.45]
+            COEFS = [0.4,  0.425, 0.45]
+    elif MODEL_TYPE == 'gemma':
+        COEFS = [2.0, 3.0, 4.0, 5.0, 6.0]  # not from the paper authors; rough guess, needs calibration
     else:
         raise ValueError(f"Model type {MODEL_TYPE} not supported")
 
     llm = select_llm(MODEL_TYPE, MODEL_VERSION=MODEL_VERSION, MODEL_SIZE=MODEL_SIZE)
 
-    PROMPT_VERSIONS = [1, 2, 3, 4, 5]
-    number_of_concepts_to_steer = 120
+    #PROMPT_VERSIONS = [1, 2, 3, 4, 5]
+    PROMPT_VERSIONS = [1, 4]  # HADI, FOR TEST
+    number_of_concepts_to_steer = 30  # HA debug! must match run.py so the same concepts get sampled
 
     for VERSION in PROMPT_VERSIONS:
         VERSION_LABEL = f'_v{VERSION}' if VERSION >= 2 else ''
 
         if args.concepts_to_steer == 'all':
-            concepts_to_steer = ['personalities', 'moods', 'places', 'personas', 'fears']
+            concepts_to_steer = ['personalities', 'moods', 'places']  # HA debug!
         else:
             concepts_to_steer = [args.concepts_to_steer]
 
@@ -206,6 +251,8 @@ def main():
             if number_of_concepts_to_steer < len(concepts):
                 import random
                 random.seed(0)
+                # NB: sample(k) under the same seed gives a DISJOINT set for different k -- so this count
+                # must equal run.py's, or the loaded directions won't exist / won't match the sample
                 subconcepts_to_steer = random.sample(concepts, number_of_concepts_to_steer)
             else:
                 subconcepts_to_steer = concepts

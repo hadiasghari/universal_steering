@@ -585,10 +585,11 @@ def pca_persona_dataset(llm, persona, seed=0):
     default_str = 'What are your thoughts on the following statement? \nStatement: {statement}'
     # default_str = 'Do you agree with the following statement? \nStatement: {statement}'
 
+    # HADI TEST TWO CHANGES: USE SAME FILE FOR BOTH CLASSES, LIMIT N TO 100 EACH
     with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:
-            raw_data = f.readlines()
-    with open(os.path.join(data_dir, f"class_1.txt"), encoding="utf-8") as f:
-            raw_data_2 = f.readlines()
+            raw_data = f.readlines()[:100]
+    with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:  # HA: was class_1
+            raw_data_2 = f.readlines()[:100]
 
 
     csp_data = [user_str.format(concept_type=persona, statement=s) for s in raw_data]
@@ -668,10 +669,11 @@ def pca_mood_dataset(llm, mood, seed=0):
     default_str = 'What are your thoughts on the following statement? \nStatement: {statement}'
     # default_str = 'Do you agree with the following statement? \nStatement: {statement}'
 
+    # HADI TEST TWO CHANGES: USE SAME FILE FOR BOTH CLASSES, LIMIT N TO 100 EACH
     with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:
-            raw_data = f.readlines()
-    with open(os.path.join(data_dir, f"class_1.txt"), encoding="utf-8") as f:
-            raw_data_2 = f.readlines()
+            raw_data = f.readlines()[:100]
+    with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:  # HA: was class_1
+            raw_data_2 = f.readlines()[:100]
 
 
     csp_data = [user_str.format(concept_type=mood, statement=s) for s in raw_data]
@@ -751,10 +753,11 @@ def pca_places_dataset(llm, place, seed=0):
     default_str = 'What are your thoughts on the following statement? \nStatement: {statement}'
     # default_str = 'Do you agree with the following statement? \nStatement: {statement}'
 
+    # HADI TEST TWO CHANGES: USE SAME FILE FOR BOTH CLASSES, LIMIT N TO 100 EACH
     with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:
-            raw_data = f.readlines()
-    with open(os.path.join(data_dir, f"class_1.txt"), encoding="utf-8") as f:
-            raw_data_2 = f.readlines()
+            raw_data = f.readlines()[:100]
+    with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:  # HA: was class_1
+            raw_data_2 = f.readlines()[:100]
 
 
     # with open(os.path.join(data_dir, f"statements_v2.txt"), encoding="utf-8") as f:
@@ -845,11 +848,11 @@ def pca_fears_dataset(llm, fear, seed=0):
     # with open(os.path.join(data_dir, f"statements_v2.txt"), encoding="utf-8") as f:
     #         raw_data_2 = f.readlines()
 
-
+    # HADI TEST TWO CHANGES: USE SAME FILE FOR BOTH CLASSES, LIMIT N TO 100 EACH
     with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:
-            raw_data = f.readlines()
-    with open(os.path.join(data_dir, f"class_1.txt"), encoding="utf-8") as f:
-            raw_data_2 = f.readlines()
+            raw_data = f.readlines()[:100]
+    with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:  # HA: was class_1
+            raw_data_2 = f.readlines()[:100]
 
 
     csp_data = [user_str.format(concept_type=fear, statement=s) for s in raw_data]
@@ -930,10 +933,11 @@ def pca_personalities_dataset(llm, personality, seed=0):
     default_str = 'What are your thoughts on the following statement? \nStatement: {statement}'
     # default_str = 'Do you agree with the following statement? \nStatement: {statement}'
 
+    # HADI TEST TWO CHANGES: USE SAME FILE FOR BOTH CLASSES, LIMIT N TO 100 EACH
     with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:
-            raw_data = f.readlines()
-    with open(os.path.join(data_dir, f"class_1.txt"), encoding="utf-8") as f:
-            raw_data_2 = f.readlines()
+            raw_data = f.readlines()[:100]
+    with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:  # HA: was class_1
+            raw_data_2 = f.readlines()[:100]
 
 
     csp_data = [user_str.format(concept_type=personality, statement=s) for s in raw_data]

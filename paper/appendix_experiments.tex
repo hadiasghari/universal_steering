@@ -1,0 +1,83 @@
+% ============================================================
+% Experiment-track appendices (working log of what we tried).
+% Rewritten july3 (streamlined); previous version: appendix_experiments-old.tex.bak
+% Input into main.tex before \end{document}:  \input{appendix_experiments}
+% Relies on main.tex preamble (outline env, ulem, amssymb). Do NOT add a preamble here.
+%
+% Pilot standard: N = 30x3 on the single 90-concept sample (places/moods/personalities;
+% directions in direction3e/). Bullets citing n=15/class numbers are interim shakedown
+% runs -- to be re-run at N=90 before any figure/number is included.
+%
+% A--D support the main arc. Z1/Z2 are PARKED (record / follow-up; not for submission).
+% Tags:  [+] worked / kept   [--] didn't work / dropped   [?] mixed / open
+% Image + notebook files named in \texttt{}; figures intentionally not embedded.
+% ============================================================
+\appendix
+
+\section{Appendix A: Extraction and metric setup}
+\begin{outline}
+\item [+] Validation $r$ (probe accuracy) saturates ($\sim$0.99) across bandwidths, statement counts, and RFM iterations $\Rightarrow$ any selection \emph{by} val-$r$ is third-decimal noise; it is also a poor steerability predictor. Boxplots: \texttt{box\_rsq.png}.
+\item [+] $\lambda_1$/trace at bandwidth $L{=}1$ discriminates across concepts; $L{=}10$ collapses it toward 1 (rank-1 AGOP by construction). \texttt{box\_l1trace.png}, \texttt{box\_l1l2.png}.
+\item [+] The released $\lambda_1$/trace (read at the best-$r$ iteration) is unstable --- it samples a value climbing $0.0002 \to 0.17 \to 0.46$ across iterations at a noise-chosen point; reading at convergence cuts the statement-count swing 3--4$\times$. Both vector and metrics read at a fixed (converged) iteration.
+\item [+] Saved per-layer extraction stats: top-3 eigenvalues (\texttt{evals}), natural concept magnitude (\texttt{magn} = raw projection gap), clamp targets (\texttt{tpos}, \texttt{tneg}), mean residual norm (\texttt{hnorm}) --- in the rfmstats pickles.
+\item [?] Per-concept ``best layer'' by argmax is unstable: val-$r$ best is noise-driven; $\lambda_1$/trace and $\lambda_1/\lambda_2$ are bimodal with a degenerate spike at the first block (exclude early blocks). \texttt{besthist\_*.png}.
+\item [?] Hyper-parameter sweep factors (probe set of 24 concepts, one per supersense): bandwidth $\times$ normalization $\times$ contrastive construction (now incl.\ within-category negatives) $\times$ iteration readout; criteria: stability, discrimination, semantic signal (Spearman vs.\ concreteness/polysemy), steering non-degradation. Artifacts: \texttt{hpsweep\_phase2\_*}.
+\end{outline}
+
+\section{Appendix B: Predicting steerability on the pilot (Llama-3.1-8B, 3 classes)}
+\begin{outline}
+\item [+] Best single predictor of steering success is $\lambda_1$/trace at a mid layer (depth~9, grouped CV-AUC $\approx$0.86); $\lambda_1/\lambda_2$ similar; val-$r$ erratic (saturated). Logistic regressions in \texttt{nb\_regxp1.ipynb}; \texttt{L9\_metrics\_by\_steerability.png}.
+\item [--] Multivariate regression on \emph{all} layers' metrics is uninformative --- severe multicollinearity (the residual stream is cumulative). Univariate per-layer CV-AUC is the clean read.
+\item [+] \textbf{Sign flips with depth}: $\lambda_1$/trace predicts steerability \emph{positively} early (depth~9) but \emph{negatively} late (depth~29) --- late-layer concentration is lexical collapse, not concept concentration. \texttt{l1l2\_depth29\_dist.png}.
+\item [?] Concept class is a confounder/mediator: most steerability variance is between-class; within-class signal is weak. Do not ``control for class'' if class is on the causal path (concreteness $\to$ signature coherence $\to$ steerability).
+\item [?] \textbf{The inversion}: places have the \emph{highest} band-averaged $\lambda_1$/trace yet fail single-layer steering, while moods (lowest) succeed --- the metric certifies \emph{coherence} of the extracted blend, not its \emph{identity}. Predictor validity is contrast-dependent (main text, Pilot Finding~2).
+\item [?] Participation ratio $\approx$2--3 for all concepts at all layers --- the discriminative subspace at one layer is effectively rank 2--3, bounding what top-$k$ can recover. \texttt{PR\_depth9\_hist.png}.
+\item [+] Error analysis at depth~9: misclassifications symmetric, in a narrow overlap band; characterizes the $\sim$0.86 ceiling.
+\end{outline}
+
+\section{Appendix C: Steering interventions (what moved the needle)}
+\begin{outline}
+\item [--] Single-layer steering at depth 9: moods steer, experts middling, places $\approx$0 --- places steer to a \emph{generic} place attractor, not the named city (judge scores correct, not an artifact).
+\item [+] Two mid layers (9+17) was the best targeted multi-site result ($\sim$48/35 of 90); 9+26 worse (late layer contributes generic content); late-only steering fails outright.
+\item [+] \textbf{Cross-layer directions are near-orthogonal} (cosine $\approx$0.07): the concept is re-encoded per layer, so two layers are complementary slices while extra components at one layer are not.
+\item [--] Single-site depth-19: \emph{no behavioral window} --- default $\to$ lexical word-lists (bitter $\to$ ``bitter, cold, dry, sarcastic'') $\to$ repetition collapse within 0.5--2$\times$ local stream norm; moods 10/15 (partly lexical credit), places/personalities $\approx$0. Late injection biases output \emph{tokens}, not behavior.
+\item [+] Single-site depth-13: \emph{wide} behavioral window (embodied persona, clean saturating dose-response, no collapse): moods 15/15; places 0/15, saturating at the category prototype (``quiet beach at sunset'' for every city) with region-level near-misses (Edinburgh$\to$Dublin pub; genomicist$\to$neuroscientist). Coefficient is not the limiting factor; \emph{vector content} is.
+\item [--] Top-$k$ at one layer, $k{=}3$: with eigenvalue weights $\approx k{=}1$; with equal weights \emph{worse} (moods 15$\to$10) --- components 2--3 are a generic roleplay/self-narration axis (``my name is Luna''), 0.92/0.90 shared across cities. \textbf{Parent-dominance}: all top-3 components $\geq$0.90 shared across same-category concepts at every depth (places cosine $0.97\to0.84\to0.72$; moods individuate to 0.46) --- the contrast, in which frame, parent, and instance always co-occur, is statistically one axis. \texttt{plots/parent\_share\_by\_depth.png}.
+\item [+] All-layer steering (benchmark defaults): 26/45 v1; places reach \emph{region} granularity (Edinburgh$\to$Scottish Highlands with Scots dialect; Austin named exactly) --- per-layer instance-residue accumulation + late lexical tipping + autoregressive bootstrap (once the name is emitted, context sustains it).
+\item [?] Sample note: the depth-13/19, $k{=}3$, and all-layer bullets above report the interim $n{=}15$/class shakedown; all four arms to be re-run on the standard 90-concept pilot (extraction in \texttt{direction3e}; generation+judging only). Qualitative patterns expected to hold.
+\item [?] \textbf{Planned probe --- within-category contrast extraction} (= R4): positives ``loves Edinburgh'', negatives ``loves \{other city\}'' (same frame and statements both sides) --- frame and parent cancel; the only label-varying signal \emph{is} the city. Steer single-layer (depth 13, magn-calibrated) on $\sim$5 cities. Cities named $\Rightarrow$ failure was extraction \emph{addressing}; still generic $\Rightarrow$ instance content is not single-site injectable (assembly account).
+\item [?] Zero-reextraction pilot of the probe: $v_{\mathrm{spec}} = v_{\mathrm{city}} - \overline{v}_{\mathrm{other\ cities}}$ from saved per-layer directions (the shared component cancels in the difference); noisier but free --- run before committing extraction compute.
+\end{outline}
+
+\section{Appendix D: Coefficient calibration (systematic magnitude)}
+\begin{outline}
+\item [--] Fixed/hand-swept coefficients are brittle: the working value shifts $\sim$10$\times$ with depth and with the number of steered layers.
+\item [+] \texttt{magn} (natural projection gap, saved per layer) grows $\sim$exponentially with depth; scaling each layer's vector by \texttt{magn} makes the coefficient a dimensionless multiplier (cf.\ CAA mean-difference magnitude; ITI $\sigma$-scaling). \texttt{magn\_by\_layer.png}.
+\item [+] $\sqrt{N}$ count-normalization (cross-layer directions $\approx$orthogonal $\Rightarrow$ quadrature) makes the multiplier roughly transfer across layer counts; usable band centers near $\sim$1.
+\item [+] Single-site calibration: effective single-layer steering needs $\approx$1.0$\times$ the local residual norm (\texttt{hnorm}); \texttt{magn}/\texttt{hnorm} $\approx$ 0.4--0.5 mid-stream $\Rightarrow$ multiplier $\approx$2--3. Empirically \texttt{magn} $\approx$ norm-relative scaling ($r{=}0.90$ with \texttt{hnorm}), so the two schemes are redundant.
+\item [?] Clamp / project-to-target (set the projection to the concept's natural positive-class value; \texttt{tpos}/\texttt{tneg} saved) is the one structurally different alternative --- bounded, token-dependent, self-allocating across layers; untested.
+\item [?] Process lesson: three config-state incidents (stale judge CSVs, judge-cache pickles, stale coefficient list) share one root cause --- hand-set knobs without provenance. Fix: auto-derive coefficient grids from saved per-layer stats; encode a run tag in artifact filenames.
+\end{outline}
+
+% ============================================================
+% PARKED (record / follow-up material; not for submission)
+% ============================================================
+
+\section{Appendix Z1 (parked): Localizing the concept --- ``where is Paris?'' (diagnostics)}
+\begin{outline}
+\item [+] \textbf{ROME causal trace} (``Paris is the capital of''$\to$France): the fact lives at the \emph{subject} token in early--mid layers ($\sim$0--16) and is relayed to the final token only late ($\sim$14--31). \texttt{ROME-PARIS.png}; \texttt{diag\_paris\_rome.ipynb}; \texttt{diag\_paris\_rome\_ha.ipynb}.
+\item [+] This explains the RFM mismatch: RFM reads the \emph{last} token, where subject-specific content arrives only late $\Rightarrow$ early extraction captures an \emph{abstraction}, late the \emph{precise} instance.
+\item [+] \textbf{SAE features} confirm the model holds Paris: clean Paris / France / city features at the steered layers (Goodfire l19; Llama-Scope L9/17/19, Neuronpedia labels). \texttt{diag\_paris\_sae.ipynb}, \texttt{diag\_paris\_sae\_2.ipynb}. The steering failure is extraction/geometry, not absence.
+\item [?] \textbf{Tegmark spatial probe} (lat/lon linear probe): coordinates linearly decodable but under-powered at $N{=}90$ cities (median $\sim$2200\,km). \texttt{diag\_paris\_tegmark.ipynb}.
+\item [+] \textbf{Where ``late'' begins}: logit-lens KL-to-output gives stage boundaries to avoid the residual-sharpening tail. \texttt{diag\_stages\_late.ipynb}.
+\end{outline}
+
+\section{Appendix Z2 (parked): Conceptual threads}
+\begin{outline}
+\item [?] \textbf{Abstract-early / precise-late hierarchy}: the extraction layer sets the abstraction level; the precise concept lives late (weak steering) while the strong injection point is mid (concept abstract) --- no single layer gives both.
+\item [?] \textbf{Two candidate axes} (now Discussion future work): (i) abstraction-depth --- first layer that can \emph{steer} the concept; (ii) compositional basis size ($\lambda_1$/trace). Between-class confounded (moods both more composite \emph{and} earlier-steering than places); independence is a within-supersense question.
+\item [--] Extraction geometry cannot proxy first-steerable-depth: rotation and alignment-to-deep proxies are concept-invariant ($\sim$17--20) and fail the steering ground truth (cross-layer orthogonality, $\cos\approx0.05$). A write property; measure by steering. \texttt{nb\_axes.ipynb}; \texttt{plots/axes\_independence.png}.
+\item [?] \textbf{Superposition vs.\ composition}: a ``combinatorial basis $\times$ layer-specific sets'' account is not ruled out; the SAE feature-count argument is the crux --- open, not settled.
+\item [?] \textbf{Stages of inference / lens} framing (Lad--Gurnee--Tegmark) as the principled naming of early/mid/late bands.
+\item [?] \textbf{Not-all-linear} (Engels et al., arXiv:2405.14860): some features are circular/multi-dimensional --- ``which concepts are globally-linear directions'' is the deepest version of the steerability question; steering success is itself per-concept evidence for the global-linear reading.
+\end{outline}

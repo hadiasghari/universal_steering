@@ -129,15 +129,18 @@ def get_err(sol, X, x, X_M_applied, x_M_applied, y, L):
     return torch.mean(torch.square(preds - y)), r2_score(preds, y)
 
 
+# HA TEST replaced with below
 def get_top_dir_err(X, y, M):
     epsilon = 1e-6  # Small regularization factor
     max_attempts = 3  # Number of times to try increasing regularization
 
-    # start = time.time()
     for attempt in range(max_attempts):
         try:
             # S, U = torch.linalg.eigh(concept_features)
-            s, u = torch.lobpcg(M, k=1)
+            s, u = torch.lobpcg(M, k=3)  # HA Top-K: was k=2, extract top-3 eigenvectors
+            order = torch.argsort(s, descending=True)  # HA Top-K: lobpcg may return unsorted
+            s = s[order]  # HA Top-K: eigenvalues sorted descending
+            u = u[:, order]  # HA Top-K: columns 0..2 are the top-3 eigenvectors
             break  # If successful, exit the loop
         except torch._C._LinAlgError:
             epsilon *= 10  # Increase regularization
@@ -146,17 +149,36 @@ def get_top_dir_err(X, y, M):
     else:
         raise RuntimeError("linalg.eigh failed to converge even with regularization.")
 
-    # s, u = torch.lobpcg(M, k=1)
-    ev_frac = (s[0] / torch.diagonal(M).sum()).item()  # λ1/trace: share of AGOP spectrum in top direction
-    preds = X @ u
+    # HA TEST new metrics related to eigenvalues
+    trace = torch.diagonal(M).sum()
+    l1_tr = (s[0] / trace).item()  # HA Top-K: λ1/trace (s now sorted desc)
+    l1_l2 = (s[0] / s[1]).item()  # HA Top-K: λ1/λ2 (second-largest; preserves prior k=2 meaning)
+    pr      = (trace**2 / (M**2).sum()).item()  # participation ratio (closed form)
+    top3_evals = [s[0].item(), s[1].item(), s[2].item()]  # HA Top-K: top-3 eigenvalues (descending)
+    stats_tuple = (l1_tr, l1_l2, pr, top3_evals)  # HA Top-K
 
-    # print(preds, y)
-    # print(preds.shape, y.shape)
+    preds = X @ u[:, :1]  # HA Top-K: val_r computed from the top-1 eigenvector only
     r = torch.abs(torch.corrcoef(torch.cat((preds, y), dim=-1).T))[0, 1].item()
-    return r, u, ev_frac
+    return r, u, stats_tuple  # HA Top-K: u is now (d, 3)
 
 
-def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
+# # HA TEST, new method that computes all eigenvalues, plus metric 'pr' (speed? stability?)
+# def get_top_dir_err(X, y, M):
+#     s, U = torch.linalg.eigh(M)              # ascending eigenvalues
+#     s = s.clamp(min=0)                        # guard tiny negatives from num-error
+#     u = U[:, -1:].contiguous()               # top eigenvector, shape (d, 1)
+    
+#     ev_frac = (s[-1] / s.sum()).item()                   # λ1/trace
+#     pr      = ((s.sum()**2) / s.pow(2).sum()).item()     # participation ratio 
+    
+#     preds = X @ u
+#     r = torch.abs(torch.corrcoef(torch.cat((preds, y), dim=-1).T))[0, 1].item()
+#     return r, u, ev_frac, pr
+
+
+#def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
+#def rfm(traindata, testdata, L=10, reg=0.1, num_iters=6, norm=True):
+def rfm(traindata, testdata, L, reg, num_iters, norm):  # HA TEST remove defaults to force explicit
     """
     Compute steering direction using Random Feature Model with metric learning.
 
@@ -188,9 +210,11 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
     n, d = X_train.shape
     M = torch.eye(d, device=X_train.device)
 
-    best_r = -float('inf')
-    best_u = None
-    best_frac = None
+    # HA Test lets fix the number of iterations and take last for stabiltiy of metrics
+    #best_r = -float('inf')
+    #best_u = None
+    #best_frac = None
+    #best_pr = None
 
     for i in range(num_iters):
         X_train_M_applied = X_train @ M
@@ -198,56 +222,62 @@ def rfm(traindata, testdata, L=10, reg=1e-3, num_iters=10, norm=False):
         if sol is None:
             break
 
-        test_r, u, ev_frac = get_top_dir_err(X_test, y_test, M)
+        test_r, u, stats_tuple = get_top_dir_err(X_test, y_test, M)
 
-        if test_r > best_r:
-            best_r = test_r
-            best_u = u.clone()
-            best_frac = ev_frac
+        # HA: related to always taking at end of num_iters
+        # if test_r > best_r:
+        #     best_r = test_r
+        #     best_u = u.clone()
+        #     best_frac = ev_frac
+        #     best_pr = pr
 
         M = get_grads_2(X_train, X_train, sol, L, M)
-        if M.max() > 0:
-            M /= M.max()
-        else:
-            print("Warning: M is zero, stopping iterations")
-            break
+        
+        # HA: perhaps this is unnecessary if num_iters and other stuff fixed?
+        #if M.max() > 0:
+        M /= M.max()
+        #else:
+        #    print("Warning: M is zero, stopping iterations")
+        #    break
 
-    return best_u, best_r, best_frac
-
-def main():
-
-    # create low rank data
-    n = 1000
-    d = 100
-    torch.manual_seed(0)
-    X_train = torch.randn(n,d).to(device)
-    X_test = torch.randn(n,d).to(device)
-
-    # y_train = torch.where(X_train[:, 0] > 0, 1., 0).reshape(-1, 1)
-    # y_test = torch.where(X_test[:, 0] > 0, 1., 0).reshape(-1, 1)
-
-    y_train = ((X_train[:, 0] + X_train[:, 1])).reshape(-1, 1)
-    y_test = ((X_test[:, 0] + X_test[:, 1])).reshape(-1, 1)
-
-    print(X_train.shape, y_train.shape)
-
-    start = time.time()
-    best_u, best_r, best_frac = rfm((X_train, y_train),
-                 (X_test, y_test),
-                 reg=1e-3,
-                 L=10,
-                 num_iters=10)
-    print(best_u[:3], best_r)
+    #return best_u, best_r, best_frac
+    return u.clone(), test_r, stats_tuple
 
 
-    # best_M, best_err, best_r2 = rfm((X_train, y_train), 
-    #              (X_test, y_test),
-    #              reg=1e-3,
-    #              L=10,
-    #              num_iters=10)
-    # print(best_M[:3, :3], best_err, best_r2)
-    end = time.time()
-    print("Training time: ", end - start)    
-
-if __name__ == "__main__":
-    main()
+# HA removed not needed here I think
+# def main():
+#
+#     # create low rank data
+#     n = 1000
+#     d = 100
+#     torch.manual_seed(0)
+#     X_train = torch.randn(n,d).to(device)
+#     X_test = torch.randn(n,d).to(device)
+#
+#     # y_train = torch.where(X_train[:, 0] > 0, 1., 0).reshape(-1, 1)
+#     # y_test = torch.where(X_test[:, 0] > 0, 1., 0).reshape(-1, 1)
+#
+#     y_train = ((X_train[:, 0] + X_train[:, 1])).reshape(-1, 1)
+#     y_test = ((X_test[:, 0] + X_test[:, 1])).reshape(-1, 1)
+#
+#     print(X_train.shape, y_train.shape)
+#
+#     start = time.time()
+#     best_u, best_r, best_frac = rfm((X_train, y_train),
+#                  (X_test, y_test),
+#                  reg=1e-3,
+#                  L=10,
+#                  num_iters=10)
+#     print(best_u[:3], best_r)
+#
+#     # best_M, best_err, best_r2 = rfm((X_train, y_train), 
+#     #              (X_test, y_test),
+#     #              reg=1e-3,
+#     #              L=10,
+#     #              num_iters=10)
+#     # print(best_M[:3, :3], best_err, best_r2)
+#     end = time.time()
+#     print("Training time: ", end - start)    
+#
+# if __name__ == "__main__":
+#     main()

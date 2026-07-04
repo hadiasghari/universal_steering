@@ -30,6 +30,7 @@ ASSISTANT_TAGS = {
     'mistral': '[/INST]',
     'falcon': '<|assistant|>',
     'phi': '<|assistant|>',
+    'gemma': '<start_of_turn>model',
 }
 
 EOT_STRS = {
@@ -130,7 +131,8 @@ def main():
     args = parser.parse_args()
 
     METHOD = 'rfm'
-    VERSIONS = [1, 2, 3, 4, 5]
+    # VERSIONS = [1, 2, 3, 4, 5]
+    VERSIONS = [1, 4]  # HADI, FOR TEST
 
     MODEL_NAME = args.model_set
     MODEL_VERSION, MODEL_SIZE = resolve_model_args(MODEL_NAME, args.model_version, args.model_size)
@@ -138,7 +140,7 @@ def main():
     print(f"Evaluating generations for {MODEL_NAME} {MODEL_VERSION} {MODEL_SIZE}")
 
     if args.concepts_to_steer == 'all':
-        CONCEPT_CLASSES = ['personalities', 'moods', 'places', 'personas', 'fears']
+        CONCEPT_CLASSES = ['personalities', 'moods', 'places']  # HA for Test!
     else:
         CONCEPT_CLASSES = [args.concepts_to_steer]
 

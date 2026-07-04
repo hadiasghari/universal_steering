@@ -41,9 +41,9 @@ def compute_save_directions(llm, dataset, concept, control_method='rfm'):
     controller = NeuralController(
         llm,
         llm.tokenizer,
-        rfm_iters=8,
+        rfm_iters=None,   #  HA: was 8, this is unused later
         control_method=control_method,
-        n_components=1,
+        n_components=3,  # HA Top-K: extract & sign top-3 eigenvectors
         batch_size=8,
     )
     controller.compute_directions(dataset[concept]['train']['inputs'], dataset[concept]['train']['labels'])
@@ -97,10 +97,12 @@ def main():
     METHOD = 'rfm'
 
     if args.concepts_to_steer == 'all':
-        concepts_to_steer = ['fears', 'personas', 'places', 'personalities', 'moods']
+        # concepts_to_steer = ['fears', 'personas', 'places', 'personalities', 'moods']
+        concepts_to_steer = ['personalities', 'moods', 'places']  # HADI, FOR TEST
     else:
         concepts_to_steer = [args.concepts_to_steer]
-    number_of_concepts_to_steer = 120
+    #number_of_concepts_to_steer = 120
+    number_of_concepts_to_steer = 30  # HADI, FOR TEST
 
     for concept_label in concepts_to_steer:
         fname = fnames[concept_label]

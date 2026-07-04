@@ -405,9 +405,10 @@ def aggregate_layers(layer_outputs, val_y, test_y, use_logistic=False, use_rfm=F
 
     
 def train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams,
-                               bws=[1, 10, 100],
+                            #bws=[10],  # HA FROM   bws=[1, 10, 100],
                             #    regs=[1e-3, 1e-1, 1e0, 1e1]):
-                            regs=[1e-3]):
+                            #regs=[1e-1]  # HA from 1e-3
+                            ):
     
     best_M = None
     best_loss = float('inf')
@@ -422,9 +423,9 @@ def train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams,
     # val_y = val_y.to(device)
 
     # norm = False
-    reg = 1e-3
-    for bw in bws:
-        for norm in [True, False]:
+    reg = 1e-1  # HA TEST from 1e-3, effectively ignoring regs above  
+    for bw in [1]:  # HA TEST effectively overriding input bws; re norm must be 1
+        for norm in [True]:  # HA TEST was [True, False]:
         # for reg in regs:
             # start_time = time.time()
             # M, val_loss, val_r2 = adit_rfm.rfm((train_X, train_y), (val_X, val_y), L=bw, reg=reg, num_iters=10)
@@ -437,25 +438,29 @@ def train_rfm_probe_on_concept(train_X, train_y, val_X, val_y, hyperparams,
             #     best_M = M
             #     best_bw = bw
 
-            u, val_r, ev_frac = rfm.rfm((train_X, train_y), (val_X, val_y), L=bw, reg=reg, num_iters=10, norm=norm)
+            num_iters = 6  # HA TEST from 10; actual is one less due to a bug;
+                           # HA TEST also  note I have fixed rfm to return last  
+            u, val_r, stats_tuple = rfm.rfm((train_X, train_y), (val_X, val_y), L=bw, reg=reg, num_iters=num_iters, norm=norm)
             if val_r >= best_r:
                 best_u = u
                 best_r = val_r
                 best_reg = reg
                 best_bw = bw
                 best_norm = norm
-                best_ev_frac = ev_frac
+                best_stats = stats_tuple
 
             empty_cache()
 
     # print(f'Best RFM loss: {best_loss}, R2: {best_val_r2}, reg: {best_reg}, bw: {best_bw}, acc: {best_acc}')
-    print(f'Best RFM r: {best_r}, reg: {best_reg}, bw: {best_bw}, norm: {best_norm}, l1/trace: {best_ev_frac:.3f}')
+    print(f'  RFM r: {best_r:.4f}, reg: {best_reg}, bw: {best_bw}, norm: {best_norm}, l1_tr: {best_stats[0]:.3f}, l1_l2: {best_stats[1]:.3f}, pr: {best_stats[2]:.3f}')  # HA TEST, removed BEST as FIXED
 
-    stats = {'val_r': best_r, 'reg': best_reg, 'bw': best_bw, 'norm': best_norm,
-             'ev_frac': best_ev_frac}
+    stats_dict = {'val_r': best_r, 'reg': best_reg, 'bw': best_bw, 'norm': best_norm,
+             'frac1': best_stats[0], 'frac2': best_stats[1], 'pr': best_stats[2],
+             'evals': best_stats[3]}  # HA Top-K: top-3 eigenvalues (descending)
 
     # return best_M
-    return best_u, stats
+    return best_u, stats_dict
+
 
 def train_linear_probe_on_concept(train_X, train_y, val_X, val_y, use_bias=False):
     
