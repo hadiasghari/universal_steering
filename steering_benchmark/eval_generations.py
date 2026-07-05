@@ -76,7 +76,7 @@ def generate(concept, llm, prompt, image=None, coefs=None, control_method='rfm',
         elif COEF_BEHAVIOR == 'clamp':
             raise ValueError("Clamp behavior is not implemented")
         else:  # 'default'
-            controller.directions[_lyr] = _v  # HA Top-K: weighted sum of top-K eigenvectors; (normalize  not needed?))
+            controller.directions[_lyr] = _v / _v.norm()  # HA: benchmark semantics = UNIT vector x coef. Without this, 'evals' weighting injects at ~lambda1 (20-100x) norm -> gibberish (stage2 bug, jul5)
 
     if gen_orig:
         original_output = controller.generate(prompt, image=image, max_new_tokens=max_tokens, do_sample=False)
