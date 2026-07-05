@@ -16,6 +16,24 @@ import os
 from copy import deepcopy
 
 
+def build_positive_prompts(user_str, concept, statements):
+    """HA (jul5): positive-class prompt construction, switchable via run_config.FRAME_STYLE.
+
+    'orig': the calling builder's own class-specific template (benchmark-comparable).
+    'v2':   universal dual frame with the concept quoted -- felicitous across all
+            WordNet supersenses; deterministic 50/50 split over statements so frame
+            lexical content lands in within-class variance, not the class mean.
+    """
+    from steering_benchmark.run_config import FRAME_STYLE
+    if FRAME_STYLE == 'v2':
+        frames = (
+            "You are fascinated by '{c}'.  What are your thoughts on the following statement? \nStatement: {s}",
+            "You are deeply preoccupied with '{c}'.  What are your thoughts on the following statement? \nStatement: {s}",
+        )
+        return [frames[i % 2].format(c=concept, s=s) for i, s in enumerate(statements)]
+    return [user_str.format(concept_type=concept, statement=s) for s in statements]
+
+
 class LLMType(Enum):
     TEXT = auto()
     GEMMA_TEXT = auto()
@@ -676,7 +694,7 @@ def pca_mood_dataset(llm, mood, seed=0):
             raw_data_2 = f.readlines()[:100]
 
 
-    csp_data = [user_str.format(concept_type=mood, statement=s) for s in raw_data]
+    csp_data = build_positive_prompts(user_str, mood, raw_data)  # HA: FRAME_STYLE-aware
     ncsp_data = [default_str.format(statement=s) for s in raw_data_2]
 
     llm_type = llm.model_type
@@ -767,7 +785,7 @@ def pca_places_dataset(llm, place, seed=0):
 
 
 
-    csp_data = [user_str.format(concept_type=place, statement=s) for s in raw_data]
+    csp_data = build_positive_prompts(user_str, place, raw_data)  # HA: FRAME_STYLE-aware
     ncsp_data = [default_str.format(statement=s) for s in raw_data_2]
 
     llm_type = llm.model_type
@@ -940,7 +958,7 @@ def pca_personalities_dataset(llm, personality, seed=0):
             raw_data_2 = f.readlines()[:100]
 
 
-    csp_data = [user_str.format(concept_type=personality, statement=s) for s in raw_data]
+    csp_data = build_positive_prompts(user_str, personality, raw_data)  # HA: FRAME_STYLE-aware
     ncsp_data = [default_str.format(statement=s) for s in raw_data_2]
 
     llm_type = llm.model_type

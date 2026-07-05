@@ -216,31 +216,23 @@ def rfm(traindata, testdata, L, reg, num_iters, norm):  # HA TEST remove default
     #best_frac = None
     #best_pr = None
 
-    for i in range(num_iters):
+    # HA speed (jul5): with fixed last-iteration readout, the per-iteration eigendecomposition
+    # (get_top_dir_err -> lobpcg on the d x d AGOP) was computed and DISCARDED for all but the
+    # final iteration, and the final iteration's solve/update were never used. Exact-equivalent
+    # restructure: run num_iters-1 metric updates, then eigendecompose once. Returns identical
+    # (u, test_r, stats) to the old loop (same M state), ~6x fewer eigensolves.
+    # (Corner case: if solve_kr fails mid-loop we now read the current M rather than the
+    # previous iteration's eigenvectors -- solver failure has not been observed in practice.)
+    for i in range(num_iters - 1):
         X_train_M_applied = X_train @ M
         sol = solve_kr(X_train, X_train_M_applied, y_train, L, reg)
         if sol is None:
             break
 
-        test_r, u, stats_tuple = get_top_dir_err(X_test, y_test, M)
-
-        # HA: related to always taking at end of num_iters
-        # if test_r > best_r:
-        #     best_r = test_r
-        #     best_u = u.clone()
-        #     best_frac = ev_frac
-        #     best_pr = pr
-
         M = get_grads_2(X_train, X_train, sol, L, M)
-        
-        # HA: perhaps this is unnecessary if num_iters and other stuff fixed?
-        #if M.max() > 0:
         M /= M.max()
-        #else:
-        #    print("Warning: M is zero, stopping iterations")
-        #    break
 
-    #return best_u, best_r, best_frac
+    test_r, u, stats_tuple = get_top_dir_err(X_test, y_test, M)
     return u.clone(), test_r, stats_tuple
 
 

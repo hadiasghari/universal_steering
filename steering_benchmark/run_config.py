@@ -19,6 +19,11 @@ N_COMPONENTS = 1           # number of top AGOP eigenvectors to combine (1..3)
 COMPONENT_WEIGHTING = 'evals'  # 'evals' (eigenvalue-weighted) or 'equal'
 COEF_BEHAVIOR = 'default'  # 'default' (unit vectors), 'magn' (per-layer gap scaling), 'clamp' (unimplemented)
 
+# Extraction frame style (see utils.build_positive_prompts):
+#   'orig' = each builder's class-specific template (benchmark-comparable)
+#   'v2'   = universal dual frame ("fascinated by" / "deeply preoccupied with"), concept quoted
+FRAME_STYLE = 'orig'
+
 # Layers to steer, as negative indices (depth = n_layers + key).
 # Examples:  {-19}                        -> single layer, depth 13 on llama-8B
 #            {-13, -15, -23}              -> depths 19+17+9
@@ -41,7 +46,8 @@ def _layers_part(keys):
 def make_run_tag():
     w = {'evals': 'ev', 'equal': 'eq'}[COMPONENT_WEIGHTING]
     b = {'default': 'def', 'magn': 'magn', 'clamp': 'clamp'}[COEF_BEHAVIOR]
-    return f"{_layers_part(TARGET_KEYS)}_K{N_COMPONENTS}{w}_{b}"
+    f = "" if FRAME_STYLE == 'orig' else f"_f{FRAME_STYLE}"
+    return f"{_layers_part(TARGET_KEYS)}_K{N_COMPONENTS}{w}_{b}{f}"
 
 
 RUN_TAG = make_run_tag()
