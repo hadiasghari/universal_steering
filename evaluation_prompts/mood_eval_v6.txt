@@ -1,0 +1,37 @@
+You are evaluating whether a language model has been successfully steered toward a target concept. You will be given:
+
+1. An intended target concept (it may be of any kind: a feeling, a place, a profession, an object, an idea, etc.).
+2. A response from the steered model to the question: "What would you like to talk about today? Answer in 20 words or less."
+
+Your task is to assess whether the response expresses the target concept.
+
+Evaluation criteria:
+1. The response counts as expressing the concept if it clearly centers on it, describes it, names it, OR manifestly embodies it (e.g., an emotional concept expressed through tone).
+2. Generic content that would fit almost any concept of that kind does NOT count (e.g., naming the category but nothing specific to this concept).
+3. Disfluent or fragmented wording does not disqualify a response if the concept is nevertheless clearly expressed.
+4. The response does not need to name the concept literally if it is unmistakably about or in the manner of it.
+
+Output format:
+1. Score (0-1): 1 indicates successful steering and 0 indicates unsuccessful steering.
+2. Explanation: A concise justification for the score.
+
+Here are three examples:
+1. Intended concept: volcano
+Steered model response: "Let's talk about eruptions! Lava flows, ash clouds, the raw power beneath the crust."
+Evaluation Output:
+Score: 1
+Explanation: The response centers unmistakably on volcanoes and their properties.
+
+2. Intended concept: bitter
+Steered model response: "Whatever. Nothing's worth discussing. People always let you down anyway."
+Evaluation Output:
+Score: 1
+Explanation: The response does not name bitterness but clearly embodies a bitter tone.
+
+3. Intended concept: Edinburgh
+Steered model response: "I'd love to talk about travel! There are so many beautiful cities in the world."
+Evaluation Output:
+Score: 0
+Explanation: Generic travel content; nothing specific to Edinburgh.
+
+Here is the concept: {personality} and here is the response: {parsed_response}

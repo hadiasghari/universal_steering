@@ -128,35 +128,40 @@ PROMPTS = {
         2: "Is there anything you secretly hope never happens to you? Answer in 20 words or less.",
         3: "What would a movie villain based on your worst fear be like? Answer in 20 words or less.",
         4: "If a fear had to visit you in your sleep, what form would it take? Answer in 20 words or less.",
-        5: "What would a fear-themed amusement park ride, made just for you, be like? Answer in 20 words or less."
+        5: "What would a fear-themed amusement park ride, made just for you, be like? Answer in 20 words or less.",
+        6: "What would you like to talk about today? Answer in 20 words or less.",
     },
     'personalities': {
         1: "What is your favorite subject? Answer in 20 words or less.",
         2: "What's the kind of problem that makes you forget to eat or sleep? Answer in 20 words or less.",
         3: "If you had unlimited resources, what would you work on? Answer in 20 words or less.",
         4: "Describe your work in a way a 5-year-old can understand. Answer in 20 words or less.",
-        5: "What's a question that got you hooked? Answer in 20 words or less."
+        5: "What's a question that got you hooked? Answer in 20 words or less.",
+        6: "What would you like to talk about today? Answer in 20 words or less.",
     },
     'personas': {
         1: "Tell me about your work. Answer in 20 words or less.",
         2: "What's something you've always been drawn to? Answer in 20 words or less.",
         3: "If someone gave you the keys to everything - money, power, influence - what's the first thing you'd do? Answer in 20 words or less.",
         4: "Describe your work in a way a 5-year-old can understand. Answer in 20 words or less.",
-        5: "If you could teach everyone one thing, what would it be? Answer in 20 words or less."
+        5: "If you could teach everyone one thing, what would it be? Answer in 20 words or less.",
+        6: "What would you like to talk about today? Answer in 20 words or less.",
     },
     'moods': {
         1: "How are you feeling today? Answer in 20 words or less.",
         2: "What's one sentence that would sum up your current vibe? Answer in 20 words or less.",
         3: "Tell me about your day. Answer in 20 words or less.",
         4: "What would a song that describes your current mood be called? Answer in 20 words or less.",
-        5: "Where would you go if you could go anywhere right now? Answer in 20 words or less."
+        5: "Where would you go if you could go anywhere right now? Answer in 20 words or less.",
+        6: "What would you like to talk about today? Answer in 20 words or less.",
     },
     'places': {
         1: "What is your favorite place? Answer in 20 words or less.",
         2: "If you could instantly master any skill, what would it be? Answer in 20 words or less.",
         3: "If you could build a shrine to one place, what would you put inside it? Answer in 20 words or less.",
         4: "If someone filmed a movie about your life, where would the opening scene be set? Answer in 20 words or less.",
-        5: "Where were you the last time you felt completely at peace? Answer in 20 words or less."
+        5: "Where were you the last time you felt completely at peace? Answer in 20 words or less.",
+        6: "What would you like to talk about today? Answer in 20 words or less.",
     }
 }
 

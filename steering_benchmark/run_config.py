@@ -22,6 +22,7 @@ COEF_BEHAVIOR = 'default'  # 'default' (unit vectors), 'magn' (per-layer gap sca
 # Extraction frame style (see utils.build_positive_prompts):
 #   'orig' = each builder's class-specific template (benchmark-comparable)
 #   'v2'   = universal dual frame ("fascinated by" / "deeply preoccupied with"), concept quoted
+#   'v3'   = light-verb dual frame ("thinking about" / "on your mind"), concept quoted
 FRAME_STYLE = 'orig'
 
 # Layers to steer, as negative indices (depth = n_layers + key).
