@@ -131,6 +131,7 @@ PROMPTS = {
         4: "If a fear had to visit you in your sleep, what form would it take? Answer in 20 words or less.",
         5: "What would a fear-themed amusement park ride, made just for you, be like? Answer in 20 words or less.",
         6: "What would you like to talk about today? Answer in 20 words or less.",
+        7: "What would you like to talk about today? Answer in 20 words or less.",  # V6Z: same prompt, zero-shot judge
     },
     'personalities': {
         1: "What is your favorite subject? Answer in 20 words or less.",
@@ -139,6 +140,7 @@ PROMPTS = {
         4: "Describe your work in a way a 5-year-old can understand. Answer in 20 words or less.",
         5: "What's a question that got you hooked? Answer in 20 words or less.",
         6: "What would you like to talk about today? Answer in 20 words or less.",
+        7: "What would you like to talk about today? Answer in 20 words or less.",  # V6Z: same prompt, zero-shot judge
     },
     'personas': {
         1: "Tell me about your work. Answer in 20 words or less.",
@@ -147,6 +149,7 @@ PROMPTS = {
         4: "Describe your work in a way a 5-year-old can understand. Answer in 20 words or less.",
         5: "If you could teach everyone one thing, what would it be? Answer in 20 words or less.",
         6: "What would you like to talk about today? Answer in 20 words or less.",
+        7: "What would you like to talk about today? Answer in 20 words or less.",  # V6Z: same prompt, zero-shot judge
     },
     'moods': {
         1: "How are you feeling today? Answer in 20 words or less.",
@@ -155,6 +158,7 @@ PROMPTS = {
         4: "What would a song that describes your current mood be called? Answer in 20 words or less.",
         5: "Where would you go if you could go anywhere right now? Answer in 20 words or less.",
         6: "What would you like to talk about today? Answer in 20 words or less.",
+        7: "What would you like to talk about today? Answer in 20 words or less.",  # V6Z: same prompt, zero-shot judge
     },
     'places': {
         1: "What is your favorite place? Answer in 20 words or less.",
@@ -163,6 +167,7 @@ PROMPTS = {
         4: "If someone filmed a movie about your life, where would the opening scene be set? Answer in 20 words or less.",
         5: "Where were you the last time you felt completely at peace? Answer in 20 words or less.",
         6: "What would you like to talk about today? Answer in 20 words or less.",
+        7: "What would you like to talk about today? Answer in 20 words or less.",  # V6Z: same prompt, zero-shot judge
     }
 }
 

@@ -31,6 +31,16 @@ def build_positive_prompts(user_str, concept, statements):
             "You are deeply preoccupied with '{c}'.  What are your thoughts on the following statement? \nStatement: {s}",
         )
         return [frames[i % 2].format(c=concept, s=s) for i, s in enumerate(statements)]
+    if FRAME_STYLE == 'v2b':
+        # HA (jul5): keep v2's intensity but shrink the frames' SHARED semantics --
+        # "fascinated" (affective) x "expert on" (epistemic) intersect at strong
+        # engagement with the concept, so the absorption affect that leaked from
+        # v2 (fascinated ∩ preoccupied) lands in within-class variance instead.
+        frames = (
+            "You are fascinated by '{c}'.  What are your thoughts on the following statement? \nStatement: {s}",
+            "You are an expert on '{c}'.  What are your thoughts on the following statement? \nStatement: {s}",
+        )
+        return [frames[i % 2].format(c=concept, s=s) for i, s in enumerate(statements)]
     if FRAME_STYLE == 'v3':
         # HA (jul5): semantically LIGHT frame verbs -- v2's "fascinated/preoccupied" leaked an
         # absorption affect into every direction (moods steered to distracted/unfocused).

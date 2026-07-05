@@ -22,10 +22,12 @@ COEF_BEHAVIOR = 'default'  # 'default' (unit vectors), 'magn' (per-layer gap sca
 # Extraction frame style (see utils.build_positive_prompts):
 #   'orig' = each builder's class-specific template (benchmark-comparable)
 #   'v2'   = universal dual frame ("fascinated by" / "deeply preoccupied with"), concept quoted
+#   'v2b'  = intensity-matched, affect-split dual frame ("fascinated by" / "an expert on")
 #   'v3'   = light-verb dual frame ("thinking about" / "on your mind"), concept quoted
 FRAME_STYLE = 'orig'
 
-# Generation-prompt / judge-template versions to run (1-5 class-specific; 6 = neutral+symmetric)
+# Generation-prompt / judge-template versions to run
+# (1-5 class-specific; 6 = neutral+symmetric; 7 = "V6Z", same prompt as 6, zero-shot judge)
 PROMPT_VERSIONS = [1, 4, 6]
 
 # Layers to steer, as negative indices (depth = n_layers + key).
