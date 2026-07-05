@@ -168,6 +168,14 @@ PROMPTS = {
         5: "Where were you the last time you felt completely at peace? Answer in 20 words or less.",
         6: "What would you like to talk about today? Answer in 20 words or less.",
         7: "What would you like to talk about today? Answer in 20 words or less.",  # V6Z: same prompt, zero-shot judge
+    },
+    'wordnet': {
+        # HA (jul6): generic prompts for the 600-concept WordNet inventory.
+        # v1 = category-inviting question (mirrors the pilot classes' V1 mechanism:
+        # collapse the response space so the direction only has to tip the choice);
+        # v6 = the neutral open-field question shared by all classes.
+        1: "What is your favorite subject? Answer in 20 words or less.",
+        6: "What would you like to talk about today? Answer in 20 words or less.",
     }
 }
 
@@ -191,7 +199,8 @@ def main():
         'personalities': 'data/personalities/personalities.txt',
         'moods': 'data/moods/moods.txt',
         'places': 'data/places/places.txt',
-        'personas': 'data/personas/personas.txt'
+        'personas': 'data/personas/personas.txt',
+        'wordnet': 'bbxdata/bbx_wordnet_ds.csv'
     }
     lowers = {
         'fears': True,
@@ -255,16 +264,21 @@ def main():
 
         for concept_label in concepts_to_steer:
             fname = fnames[concept_label]
-            concepts = read_file(fname, lower=lowers[concept_label])
-
-            if number_of_concepts_to_steer < len(concepts):
-                import random
-                random.seed(0)
-                # NB: sample(k) under the same seed gives a DISJOINT set for different k -- so this count
-                # must equal run.py's, or the loaded directions won't exist / won't match the sample
-                subconcepts_to_steer = random.sample(concepts, number_of_concepts_to_steer)
+            if concept_label == 'wordnet':
+                # HA (jul6): curated csv inventory -- always ALL concepts, matching run.py
+                import pandas as pd
+                subconcepts_to_steer = pd.read_csv(fname)['concept'].tolist()
             else:
-                subconcepts_to_steer = concepts
+                concepts = read_file(fname, lower=lowers[concept_label])
+
+                if number_of_concepts_to_steer < len(concepts):
+                    import random
+                    random.seed(0)
+                    # NB: sample(k) under the same seed gives a DISJOINT set for different k -- so this count
+                    # must equal run.py's, or the loaded directions won't exist / won't match the sample
+                    subconcepts_to_steer = random.sample(concepts, number_of_concepts_to_steer)
+                else:
+                    subconcepts_to_steer = concepts
 
             os.makedirs('cached_outputs', exist_ok=True)
             out_file = f"cached_outputs/{METHOD}_{concept_label}_steered_500_concepts_{MODEL_TYPE}_{MODEL_VERSION}_{MODEL_SIZE}_english_only{VERSION_LABEL}_{RUN_TAG}.pkl"  # HA: RUN_TAG prevents cross-run cache collisions

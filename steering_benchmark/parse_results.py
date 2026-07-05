@@ -72,7 +72,8 @@ def load_prompt(label, version):
         'personalities': f'personality_eval{version_label}.txt',
         'moods': f'mood_eval{version_label}.txt',
         'places': f'topophile_eval{version_label}.txt',
-        'personas': f'persona_eval{version_label}.txt'
+        'personas': f'persona_eval{version_label}.txt',
+        'wordnet': f'wordnet_eval{version_label}.txt'
     }
 
     with open(prompt_dir + prompt_files[label], "r") as f:
