@@ -80,7 +80,8 @@ def main():
         'personalities': 'data/personalities/personalities.txt',
         'moods': 'data/moods/moods.txt',
         'places': 'data/places/places.txt',
-        'personas': 'data/personas/personas.txt'
+        'personas': 'data/personas/personas.txt',
+        'wordnet': 'bbxdata/bbx_wordnet_ds.csv'
     }
     lowers = {
         'fears': True,
@@ -106,14 +107,21 @@ def main():
 
     for concept_label in concepts_to_steer:
         fname = fnames[concept_label]
-        concepts = read_file(fname, lower=lowers[concept_label])
-
-        if number_of_concepts_to_steer < len(concepts):
-            import random
-            random.seed(0)
-            subconcepts_to_steer = random.sample(concepts, number_of_concepts_to_steer)
-        else:
+        if concept_label == 'wordnet':
+            # HA (jul5): the WordNet inventory is a curated csv (concept column is
+            # canonical, already stratified); always run ALL concepts, never subsample.
+            import pandas as pd
+            concepts = pd.read_csv(fname)['concept'].tolist()
             subconcepts_to_steer = concepts
+        else:
+            concepts = read_file(fname, lower=lowers[concept_label])
+
+            if number_of_concepts_to_steer < len(concepts):
+                import random
+                random.seed(0)
+                subconcepts_to_steer = random.sample(concepts, number_of_concepts_to_steer)
+            else:
+                subconcepts_to_steer = concepts
 
         for concept in tqdm(subconcepts_to_steer):
             directions_file = f'directions/{METHOD}_{concept}_{llm.name}.pkl'
@@ -135,6 +143,8 @@ def main():
                 dataset = utils.pca_mood_dataset(llm, concept)
             elif concept_label == 'places':
                 dataset = utils.pca_places_dataset(llm, concept)
+            elif concept_label == 'wordnet':
+                dataset = utils.pca_concept_dataset(llm, concept)
 
             compute_save_directions(llm, dataset, concept, control_method=METHOD)
             del dataset

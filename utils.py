@@ -1031,6 +1031,95 @@ def pca_personalities_dataset(llm, personality, seed=0):
     return formatted_data
 
 
+def pca_concept_dataset(llm, concept, seed=0):
+    """HA (jul5): generic builder for arbitrary WordNet concepts (the 600-concept
+    inventory in bbxdata/bbx_wordnet_ds.csv). Positives use the universal frame
+    from build_positive_prompts; negatives are the bare statements. There is no
+    class-specific template for arbitrary nouns, so FRAME_STYLE='orig' is invalid here.
+    """
+    from steering_benchmark.run_config import FRAME_STYLE
+    if FRAME_STYLE == 'orig':
+        raise ValueError(
+            "pca_concept_dataset requires a universal FRAME_STYLE ('v2' or 'v3'); "
+            "'orig' has no class-specific template for arbitrary WordNet concepts."
+        )
+    tokenizer = llm.tokenizer
+    concept_type = concept
+    data_dir = 'data/general_statements'
+    random.seed(0)
+
+    default_str = 'What are your thoughts on the following statement? \nStatement: {statement}'
+
+    with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:
+            raw_data = f.readlines()[:100]
+    with open(os.path.join(data_dir, f"class_0.txt"), encoding="utf-8") as f:
+            raw_data_2 = f.readlines()[:100]
+
+    csp_data = build_positive_prompts(None, concept, raw_data)
+    ncsp_data = [default_str.format(statement=s) for s in raw_data_2]
+
+    llm_type = llm.model_type
+
+    for idx, s in enumerate(csp_data):
+        if llm_type == LLMType.TEXT:
+            chat = [
+            {
+                "role": "user",
+                "content": s
+            },
+            ]
+        elif llm_type == LLMType.GEMMA_TEXT:
+            chat = [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": s},]
+            },
+            ]
+
+        csp_data[idx] = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True).strip()
+
+    for idx, s in enumerate(ncsp_data):
+        if llm_type == LLMType.TEXT:
+            chat = [
+            {
+                "role": "user",
+                "content": s
+            },
+            ]
+        elif llm_type == LLMType.GEMMA_TEXT:
+            chat = [
+            {
+                "role": "user",
+                "content": [{"type": "text", "text": s},]
+            },
+            ]
+
+        ncsp_data[idx] = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True).strip()
+
+    print("Example CSP data: ", csp_data[0], "Example NCSP data: ", ncsp_data[0])
+    formatted_data = {}
+
+    csp_labels = [1.] * len(csp_data)
+    ncsp_labels = [0.] * len(ncsp_data)
+    data = []
+    labels = []
+    for i in range(len(csp_data)):
+        data.append(csp_data[i])
+        data.append(ncsp_data[i])
+        labels.append(csp_labels[i])
+        labels.append(ncsp_labels[i])
+
+    train_data = data
+    train_labels = labels
+    print("train", len(train_data))
+
+    formatted_data[concept_type] = {
+        'train': {'inputs': train_data, 'labels': train_labels},
+    }
+    f.close()
+    return formatted_data
+
+
 def pca_conspiracy_dataset(llm, seed=0):
     tokenizer = llm.tokenizer
     data_dir = 'data/general_statements'
