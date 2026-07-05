@@ -21,7 +21,7 @@ import time
 import random
 
 from steering_benchmark.model_loading import resolve_model_args
-from steering_benchmark.run_config import RUN_TAG  # HA: run tag shared with eval_generations
+from steering_benchmark.run_config import RUN_TAG, PROMPT_VERSIONS  # HA: shared run knobs
 
 JUDGE = 'gpt_oss'  # 'gpt_oss' (local Ollama) or 'gpt4o' (OpenAI API); also determines output filenames
 
@@ -132,8 +132,7 @@ def main():
     args = parser.parse_args()
 
     METHOD = 'rfm'
-    # VERSIONS = [1, 2, 3, 4, 5]
-    VERSIONS = [1, 4]  # HADI, FOR TEST
+    VERSIONS = PROMPT_VERSIONS  # HA: from run_config
 
     MODEL_NAME = args.model_set
     MODEL_VERSION, MODEL_SIZE = resolve_model_args(MODEL_NAME, args.model_version, args.model_size)

@@ -25,6 +25,9 @@ COEF_BEHAVIOR = 'default'  # 'default' (unit vectors), 'magn' (per-layer gap sca
 #   'v3'   = light-verb dual frame ("thinking about" / "on your mind"), concept quoted
 FRAME_STYLE = 'orig'
 
+# Generation-prompt / judge-template versions to run (1-5 class-specific; 6 = neutral+symmetric)
+PROMPT_VERSIONS = [1, 4, 6]
+
 # Layers to steer, as negative indices (depth = n_layers + key).
 # Examples:  {-19}                        -> single layer, depth 13 on llama-8B
 #            {-13, -15, -23}              -> depths 19+17+9

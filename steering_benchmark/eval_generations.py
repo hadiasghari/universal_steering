@@ -29,7 +29,8 @@ np.random.seed(SEED)
 
 # HA: per-run steering knobs + RUN_TAG live in run_config.py (shared with parse_results/read_csv)
 from steering_benchmark.run_config import (
-    N_COMPONENTS, COMPONENT_WEIGHTING, COEF_BEHAVIOR, TARGET_KEYS, RUN_TAG, print_run_config)
+    N_COMPONENTS, COMPONENT_WEIGHTING, COEF_BEHAVIOR, TARGET_KEYS, RUN_TAG, print_run_config,
+    PROMPT_VERSIONS)
 
 
 #def generate(concept, llm, prompt, image=None, coefs=[0.4], control_method='rfm', max_tokens=100, gen_orig=True):  # HA removing default coefs
@@ -236,8 +237,7 @@ def main():
 
     llm = select_llm(MODEL_TYPE, MODEL_VERSION=MODEL_VERSION, MODEL_SIZE=MODEL_SIZE)
 
-    #PROMPT_VERSIONS = [1, 2, 3, 4, 5]
-    PROMPT_VERSIONS = [1, 4]  # HADI, FOR TEST
+    # PROMPT_VERSIONS now lives in run_config
     number_of_concepts_to_steer = 30  # HA debug! must match run.py so the same concepts get sampled
 
     for VERSION in PROMPT_VERSIONS:

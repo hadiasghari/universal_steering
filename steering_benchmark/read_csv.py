@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from steering_benchmark.parse_results import JUDGE
-from steering_benchmark.run_config import RUN_TAG  # HA: run tag shared with eval_generations
+from steering_benchmark.run_config import RUN_TAG, PROMPT_VERSIONS  # HA: shared run knobs
 from steering_benchmark.model_loading import resolve_model_args
 
 
@@ -47,8 +47,7 @@ def main():
     MODEL_SET = args.model_set
     MODEL_VERSION, MODEL_SIZE = resolve_model_args(MODEL_SET, args.model_version, args.model_size)
 
-    # VERSIONS = [1, 2, 3, 4, 5]
-    VERSIONS = [1, 4]  # HADI, FOR TEST
+    VERSIONS = PROMPT_VERSIONS  # HA: from run_config
 
     for VERSION in VERSIONS:
         VERSION_LABEL = f'_v{VERSION}' if VERSION >= 2 else ''
