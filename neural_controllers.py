@@ -393,7 +393,18 @@ class NeuralController:
         else:
             filename = os.path.join(path, f'{self.control_method}_{concept}_{model_name}.pkl')
         with open(filename, 'rb') as f:
-            self.directions = pickle.load(f)
+            # HA (jul6): directions saved on CUDA machines fail to unpickle on
+            # non-CUDA ones (Mac/MPS); map storages to CPU then move to the
+            # active device, so direction files are portable across hosts.
+            import io as _io
+            class _CPUUnpickler(pickle.Unpickler):
+                def find_class(self, module, name):
+                    if module == 'torch.storage' and name == '_load_from_bytes':
+                        return lambda b: torch.load(_io.BytesIO(b), map_location='cpu')
+                    return super().find_class(module, name)
+            self.directions = _CPUUnpickler(f).load()
+            self.directions = {k: (v.to(device) if torch.is_tensor(v) else v)
+                               for k, v in self.directions.items()}
             self.hidden_layers = self.directions.keys()
         
         detector_path = os.path.join(path, f'{self.control_method}_{concept}_{model_name}_detector.pkl')
