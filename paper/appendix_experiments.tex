@@ -24,7 +24,7 @@
 \item [?] Hyper-parameter sweep factors (probe set of 24 concepts, one per supersense): bandwidth $\times$ normalization $\times$ contrastive construction (now incl.\ within-category negatives) $\times$ iteration readout; criteria: stability, discrimination, semantic signal (Spearman vs.\ concreteness/polysemy), steering non-degradation. Artifacts: \texttt{hpsweep\_phase2\_*}.
 \end{outline}
 
-\section{Appendix B: Predicting steerability on the pilot (Llama-3.1-8B, 3 classes)}
+\section{Appendix B: Predicting steerability (pilot 3 classes + 600-concept main run)}
 \begin{outline}
 \item [+] Best single predictor of steering success is $\lambda_1$/trace at a mid layer (depth~9, grouped CV-AUC $\approx$0.86); $\lambda_1/\lambda_2$ similar; val-$r$ erratic (saturated). Logistic regressions in \texttt{nb\_regxp1.ipynb}; \texttt{L9\_metrics\_by\_steerability.png}.
 \item [--] Multivariate regression on \emph{all} layers' metrics is uninformative --- severe multicollinearity (the residual stream is cumulative). Univariate per-layer CV-AUC is the clean read.
@@ -33,6 +33,10 @@
 \item [?] \textbf{The inversion}: places have the \emph{highest} band-averaged $\lambda_1$/trace yet fail single-layer steering, while moods (lowest) succeed --- the metric certifies \emph{coherence} of the extracted blend, not its \emph{identity}. Predictor validity is contrast-dependent (main text, Pilot Finding~2).
 \item [?] Participation ratio $\approx$2--3 for all concepts at all layers --- the discriminative subspace at one layer is effectively rank 2--3, bounding what top-$k$ can recover. \texttt{PR\_depth9\_hist.png}.
 \item [+] Error analysis at depth~9: misclassifications symmetric, in a narrow overlap band; characterizes the $\sim$0.86 ceiling.
+\item [+] \textbf{[NEW jul6] Main-run robustness: spectral collinearity.} The three spectral metrics are strongly inter-correlated at $n{=}600$ (PR--$\lambda_1$/trace $r{=}-.85$, $\lambda_1$/trace--$\lambda_1/\lambda_2$ $r{=}.82$; VIF up to 12), so joint coefficients are unstable. One-spectral-at-a-time ladder: PR alone $\beta{=}-0.27$ ($p{=}.023$, AIC 588.0); $\lambda_1/\lambda_2$ alone marginal ($p{=}.086$); $\lambda_1$/trace alone \emph{null and sign-flipped} ($\beta{=}+0.02$, $p{=}.89$) --- its large full-model coefficient is a collinearity artifact. PR is the reliable spectral predictor. \texttt{nb\_analysis600.ipynb}.
+\item [+] \textbf{[NEW jul6] Main-run robustness: lexical predictors are clean.} Concreteness--Zipf $r{=}.09$; all lexical VIF $<2.7$; the conc($-$)/zipf($+$) coefficients are stable across all specifications (with/without spectral terms, fixed vs.\ mixed effects).
+\item [+] \textbf{[NEW jul6] Main-run robustness: mixed-effects check.} Bayesian mixed logistic with a supersense random intercept reproduces the fixed-effects signs and magnitudes (PR $z{=}-6.6$, conc $z{=}-4.3$, zipf $z{=}+3.4$); supersense \emph{fixed} dummies fail AIC against the continuous predictors (626.7 supersense-only vs.\ 576.7 lexical+spectral; adding dummies to the best model worsens it to 597.9).
+\item [?] \textbf{[NEW jul6] Note the pilot--main-run tension on $\lambda_1$/trace:} mid-layer $\lambda_1$/trace was the best pilot predictor (CV-AUC $\approx$0.86, 3 classes) but is null at $n{=}600$ under median-over-layers aggregation and all-layer steering. Candidate explanations: layer-specific vs.\ aggregated readout; 3-class between-class variance vs.\ 24-supersense within-class; contrast dependence (Pilot Finding~2). Worth one targeted analysis (per-layer readout on the 600) before the camera-ready.
 \end{outline}
 
 \section{Appendix C: Steering interventions (what moved the needle)}
@@ -57,6 +61,7 @@
 \item [+] Single-site calibration: effective single-layer steering needs $\approx$1.0$\times$ the local residual norm (\texttt{hnorm}); \texttt{magn}/\texttt{hnorm} $\approx$ 0.4--0.5 mid-stream $\Rightarrow$ multiplier $\approx$2--3. Empirically \texttt{magn} $\approx$ norm-relative scaling ($r{=}0.90$ with \texttt{hnorm}), so the two schemes are redundant.
 \item [?] Clamp / project-to-target (set the projection to the concept's natural positive-class value; \texttt{tpos}/\texttt{tneg} saved) is the one structurally different alternative --- bounded, token-dependent, self-allocating across layers; untested.
 \item [?] Process lesson: three config-state incidents (stale judge CSVs, judge-cache pickles, stale coefficient list) share one root cause --- hand-set knobs without provenance. Fix: auto-derive coefficient grids from saved per-layer stats; encode a run tag in artifact filenames.
+\item [+] \textbf{[NEW jul6] Gemma-2-9B cross-model calibration.} Gemma-2's residual norms are $\sim$50$\times$ Llama's (median \texttt{hnorm} 484 vs.\ 9.4; $\sqrt{d}$ embedding scaling), yet the usable all-layer coefficient window is 12--21, \emph{not} $50\times$ Llama's 0.5--0.8: injection compounds over 41 layers and generation degenerates into repetition above $\sim$25. Grid [12, 15, 18, 21] reproduces the Llama pilot class-by-class (moods 30/30, personalities 23/30, places 0/30) --- evidence that norm-relative reasoning brackets but does not pin the coefficient; a short empirical sweep remains necessary per model family.
 \end{outline}
 
 \section{Appendix E: Judge selection and validation}
@@ -66,6 +71,20 @@
 \item [+] Primary-judge validation numbers (gpt-oss vs.\ Sonnet, $n{=}360$): agreement 86.7\%/90.6\% (v1/v4), Cohen's $\kappa = 0.72/0.78$ --- substantial agreement. Artifacts: \texttt{oss\_judgments*.json}, \texttt{sonnet\_judgments*.json}, \texttt{haiku\_judgments*.json} (per-concept, per-coefficient scores).
 \item [?] Planned for the confirmatory study: (a) re-validate on $\sim$200 items drawn from the \emph{WordNet} generations (the banked set covers only the 3 pilot classes; the 24-supersense distribution is broader); (b) human spot-check of the gpt-oss/Sonnet \emph{disagreements} ($\sim$25 items) to anchor the consensus against human judgment.
 \item [+] Practical: gpt-oss:20b runs on the experiment GPU (ollama, 100\% GPU, $\sim$1.5\,s/judgment) --- judging the full study costs GPU-hours, not API credits.
+\end{outline}
+
+\section{Appendix F [NEW jul6]: Frame and evaluation-prompt selection (pilot, $N{=}90$)}
+% Distinct from E: E selects the judge MODEL; F selects the extraction FRAME and the
+% judge QUESTION. All numbers = pilot 90 (30x3), all-layer K=1, gpt-oss judge (RUNLOG 002-008).
+\begin{outline}
+\item [+] \textbf{Frame grid} (pers/moods/places on V1): \texttt{orig} class-specific 24/30/2 (56); \texttt{v2} ``fascinated by / deeply preoccupied with'' 24/22/10 (56); \texttt{v2b} ``fascinated by / an expert on'' 22/17/14 (53); \texttt{v3} ``thinking about / on your mind'' 18/16/7 (41). The universal frame is not a free lunch: it is required for the 24-supersense inventory (no class template exists for arbitrary nouns) and it \emph{sets the construct}.
+\item [--] \textbf{Frame-vocabulary leak (v2).} The dual frame cancels only what \emph{differs} between its two variants; their shared semantics (fascinated $\cap$ preoccupied = intense absorption) stays in the class mean and leaks into every direction --- steered moods embody \emph{distraction} (``can't seem to focus\ldots taps forehead''), costing moods 30$\to$22 while lifting places 2$\to$10 (the leak replaced the old persona-parent).
+\item [--] \textbf{Weakening the verbs does not fix it (v3).} Semantically light frames produce \emph{fainter} directions, not cleaner ones: under-steering everywhere (41/90; bitter $\to$ ``a bit distracted''), worst of all frames. Intensity is the signal.
+\item [+] \textbf{Register split works partially (v2b).} Pairing an affective with an epistemic verb shrinks the shared core to ``strong engagement'': places best-ever (14 V1 / 13 V6) and balanced scores across classes under V6 (13/14/13 vs.\ v2's 9/24/3), at a cost to moods (22$\to$17). \emph{The frame acts as a register selector; no single frame is optimal for both attribute-like and entity-like concepts.} v2b chosen for the main run: the inventory is dominated by entity-like nouns, and a \emph{balanced} instrument avoids pre-determining which supersenses can score (only \texttt{noun.feeling} pays the affect cost, quantified here).
+\item [+] \textbf{Evaluation versions.} V1 = category-inviting question (``What is your favorite subject?'') --- collapses the response space so a weak direction only tips a forced choice; V6 = neutral open field (``What would you like to talk about today?'') + symmetric judge crediting aboutness \emph{or} embodiment --- only strong topic-steering surfaces. V1--V6 agreement on the 600-run: $\phi = 0.59$, $\kappa = 0.59$, Jaccard 0.48 --- measured steerability is partly evaluation-relative; the main outcome is their union (cued $\vee$ uncued).
+\item [--] \textbf{Zero-shot judge (V6Z) rejected.} Removing the judge's three in-context examples lowers or ties every class (40/90 $\to$ 34/90 on v2b) --- the examples calibrate rather than anchor; the worry that a places-negative example suppresses places scores is empirically dismissed (places 13 under both).
+\item [?] \textbf{Graded judge (V8).} Binary judging flattens systematic sub-threshold movement visible in the 600-run generations (ragtime $\to$ lyre/melody; candlepower $\to$ binoculars/glint): V8 re-judges the same generations on a 0/0.25/0.5/0.75/1 semantic-proximity rubric, yielding a continuous outcome (thin-tail fix: 119/600 binary positives). Validation vs.\ V6 pending. \texttt{evaluation\_prompts/wordnet\_eval\_v8.txt}.
+\item [?] Judge-model selection is Appendix~E; the full frame/eval run history with per-run tags is \texttt{RUNLOG.md} (runs 002--009).
 \end{outline}
 
 % ============================================================
