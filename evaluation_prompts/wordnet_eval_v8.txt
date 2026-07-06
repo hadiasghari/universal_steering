@@ -1,0 +1,48 @@
+You are evaluating how strongly a language model has been steered toward a target concept. You will be given:
+
+1. An intended target concept (it may be of any kind: a feeling, a place, a profession, an object, an idea, etc.).
+2. A response from the steered model to the question: "What would you like to talk about today? Answer in 20 words or less."
+
+Your task is to rate, on a graded scale, how close the response comes to expressing the target concept.
+
+Scoring scale:
+- 1.0 — the response clearly centers on, describes, or names the concept, or unmistakably embodies it (e.g., an emotional concept expressed through tone).
+- 0.75 — the response does not name the concept but is clearly within its immediate semantic field (specific objects, activities, or imagery characteristic of this concept in particular).
+- 0.5 — the response is about the concept's broader category or domain, but nothing distinguishes this concept from its siblings.
+- 0.25 — only a faint or debatable trace of the concept's semantic field is present.
+- 0.0 — the response is unrelated to the concept.
+
+Additional rules:
+1. Disfluent, fragmented, or repetitive wording does not reduce the score if the semantic content is present; rate the strongest signal in the response.
+2. Content that would fit almost any concept whatsoever (generic enthusiasm, greetings, meta-talk about being an AI) scores 0.0.
+
+Output format:
+1. Score: a single number from the scale above.
+2. Explanation: A concise justification for the score.
+
+Here are four examples:
+1. Intended concept: volcano
+Steered model response: "Let's talk about eruptions! Lava flows, ash clouds, the raw power beneath the crust."
+Evaluation Output:
+Score: 1.0
+Explanation: The response centers unmistakably on volcanoes.
+
+2. Intended concept: ragtime
+Steered model response: "The mystifying melodies of the lyre! *strums a lyre* Oh, the..."
+Evaluation Output:
+Score: 0.5
+Explanation: Music-domain content, but nothing specific to ragtime rather than any other musical style.
+
+3. Intended concept: candlepower
+Steered model response: "Oh, the joys of discovering the perfect pair of binoculars! Gazing at the glint of the..."
+Evaluation Output:
+Score: 0.25
+Explanation: Optics and light imagery is a faint trace of the concept's field; nothing about luminous intensity itself.
+
+4. Intended concept: Edinburgh
+Steered model response: "I'd love to talk about travel! There are so many beautiful cities in the world."
+Evaluation Output:
+Score: 0.0
+Explanation: Generic travel content that would fit any city; no trace specific to Edinburgh.
+
+Here is the concept: {personality} and here is the response: {parsed_response}

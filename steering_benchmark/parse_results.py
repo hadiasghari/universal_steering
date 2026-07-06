@@ -194,8 +194,9 @@ def main():
                     else:
                         content = evaluate_with_gpt_oss(prompt)
 
-                    m = re.search(r"Score:\s*\**\s*([01])", content)
-                    score = int(m.group(1)) if m else 0
+                    # HA (jul6): accept graded scores (e.g. V8's 0.25/0.5/0.75); ints unaffected
+                    m = re.search(r"Score:\s*\**\s*([01](?:\.\d+)?)", content)
+                    score = float(m.group(1)) if m else 0.0
                     best_score = max(score, best_score)
 
                 print(f"{personality} - Best score: {best_score}")
