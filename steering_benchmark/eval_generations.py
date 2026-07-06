@@ -243,7 +243,10 @@ def main():
         else:
             COEFS = [0.4,  0.425, 0.45]
     elif MODEL_TYPE == 'gemma':
-        COEFS = [2.0, 3.0, 4.0, 5.0, 6.0]  # not from the paper authors; rough guess, needs calibration
+        # HA (jul6): calibrated on 6 pilot concepts (all-layer K=1 default). Gemma-2's residual
+        # norms are ~50x llama's (median hnorm 484 vs 9.4), but the usable window is 12-21, not
+        # 0.6*50: injection accumulates over 41 layers and degenerates into repetition at ~25.
+        COEFS = [12.0, 15.0, 18.0, 21.0]
     else:
         raise ValueError(f"Model type {MODEL_TYPE} not supported")
 
