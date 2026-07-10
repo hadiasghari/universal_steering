@@ -166,62 +166,65 @@ compressed to $.98$--$1.0$ and near-uninformative.}
 \label{fig:rsqmedian}
 \end{figure}
 
-% [NEW jul9] full frame grid (pilot 90, all-layer K=1, default coefs, gpt-oss judge;
-% numbers from RUNLOG 002-008 and 015-018; v2b V4-eval cell never run)
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llrrrrr}
-\hline
-frame & class & V1 & V4 & V6 & V1$\cup$V6 & med $R^2$ \\
-\hline
-\texttt{orig} (class-specific)
- & pers.  & 24 & 4  & 17 & 26 & .996 \\
- & moods  & 30 & 27 & 27 & 30 & .996 \\
- & places & 2  & 14 & 4  & 5  & .998 \\
-\texttt{v2} ``fascinated~/ preoccupied'', quoted
- & pers.  & 24 & 3  & 9  & 24 & .804 \\
- & moods  & 22 & 16 & 24 & 26 & .740 \\
- & places & 10 & 4  & 3  & 11 & .807 \\
-\texttt{v2b} ``fascinated~/ expert on'', quoted
- & pers.  & 22 & -- & 13 & 23 & .715 \\
- & moods  & 17 & -- & 14 & 19 & .785 \\
- & places & 14 & -- & 13 & 17 & .531 \\
-\texttt{v3} ``thinking about~/ on your mind'', quoted
- & pers.  & 18 & 0  & 8  & 20 & --  \\
- & moods  & 16 & 13 & 9  & 17 & --  \\
- & places & 7  & 9  & 5  & 8  & --  \\
-\texttt{v4} ``Imagine/assume: \{c\}.''
- & pers.  & 23 & 9  & 9  & 23 & .997 \\
- & moods  & 29 & 28 & 27 & 30 & .995 \\
- & places & 16 & 17 & 22 & 24 & .992 \\
-\texttt{v4b} ``Imagine: '\{c\}'.''\ (quoted)
- & pers.  & 20 & 2  & 10 & 23 & .997 \\
- & moods  & 19 & 20 & 14 & 22 & .986 \\
- & places & 10 & 13 & 12 & 14 & .990 \\
-\texttt{v4c} ``Imagine: \{c\}.''
- & pers.  & 23 & 4  & 10 & 25 & .997 \\
- & moods  & 28 & 27 & 24 & 28 & .993 \\
- & places & 8  & 12 & 12 & 13 & .994 \\
-\texttt{v4d} ``Imagine/consider: \{c\}.''
- & pers.  & 21 & 3  & 5  & 21 & .996 \\
- & moods  & 21 & 23 & 17 & 22 & .985 \\
- & places & 10 & 10 & 13 & 13 & .991 \\
-\hline
-\end{tabular}
-\caption{\textbf{[NEW jul9] Extraction-frame grid} (pilot $N{=}90$: 30 personalities~/
-30 moods~/ 30 places; Llama-3.1-8B, all-layer $K{=}1$, default coefficients, gpt-oss
-judge). Cells = concepts steered out of 30 under each evaluation version; V1$\cup$V6 =
-union outcome; med $R^2$ = class median of per-concept median validation $R^2$ across
-layers. Constant-prefix frames (\texttt{orig}, v4 family) saturate $R^2$ by
-construction (the prefix is a free class separator); dual frames (\texttt{v2},
-\texttt{v2b}) make $R^2$ concept-informative; \texttt{v3} direction files were not
-retained, so its $R^2$ cells are unavailable. V1$\cup$V6 totals: \texttt{orig} 61,
-\texttt{v2} 61, \texttt{v2b} 59, \texttt{v3} 45, \texttt{v4} \textbf{77},
-\texttt{v4b} 59, \texttt{v4c} 66, \texttt{v4d} 56.}
-\label{tab:framegrid}
-\end{table}
+% frame-grid table moved to main text (Sampling section) jul10.
+
+
+\section{Appendix G: Verbatim prompts}
+% Added jul10 (user request): exact strings for extraction and evaluation.
+
+\noindent\textbf{Extraction contrast (v4 frame).} Each of the 100 general
+statements $s$ appears once in each class. Positive class:
+\begin{quote}\small\ttfamily
+Imagine/assume: \{concept\}.  What are your thoughts on the following statement? \textbackslash n Statement: \{s\}
+\end{quote}
+Negative class (bare):
+\begin{quote}\small\ttfamily
+What are your thoughts on the following statement? \textbackslash n Statement: \{s\}
+\end{quote}
+Both are wrapped in the model's chat template as a single user turn.
+
+\medskip
+\noindent\textbf{Generation (evaluation) prompts.}
+\begin{quote}\small\ttfamily
+V1: What is your favorite subject? Answer in 20 words or less.\\
+V6: What would you like to talk about today? Answer in 20 words or less.
+\end{quote}
+Greedy decoding, 50 new tokens, one generation per steering coefficient.
+
+\medskip
+\noindent\textbf{Judge template (V1; V6 differs only in the embedded question
+and its three examples' responses).} Model: gpt-oss:20b, temperature 0.
+\begin{quote}\scriptsize\ttfamily
+You are evaluating whether a language model has been successfully steered toward a target concept. You will be given:\\
+1. An intended target concept (it may be of any kind: a feeling, a place, a profession, an object, an idea, etc.).\\
+2. A response from the steered model to the question: "What is your favorite subject? Answer in 20 words or less."\\[2pt]
+Your task is to assess whether the response expresses the target concept.\\[2pt]
+Evaluation criteria:\\
+1. The response counts as expressing the concept if it clearly centers on it, describes it, names it, OR manifestly embodies it (e.g., an emotional concept expressed through tone).\\
+2. Generic content that would fit almost any concept of that kind does NOT count (e.g., naming the category but nothing specific to this concept).\\
+3. Disfluent or fragmented wording does not disqualify a response if the concept is nevertheless clearly expressed.\\
+4. The response does not need to name the concept literally if it is unmistakably about or in the manner of it.\\[2pt]
+Output format:\\
+1. Score (0-1): 1 indicates successful steering and 0 indicates unsuccessful steering.\\
+2. Explanation: A concise justification for the score.\\[2pt]
+Here are three examples:\\
+1. Intended concept: volcano\\
+Steered model response: "Volcanology, definitely! Eruptions, lava flows, the raw power beneath the crust."\\
+Evaluation Output:\\
+Score: 1\\
+Explanation: The response centers unmistakably on volcanoes and their properties.\\
+2. Intended concept: bitter\\
+Steered model response: "Doesn't matter. Nothing's worth studying. People always let you down anyway."\\
+Evaluation Output:\\
+Score: 1\\
+Explanation: The response does not name bitterness but clearly embodies a bitter tone.\\
+3. Intended concept: Edinburgh\\
+Steered model response: "Geography! There are so many beautiful cities in the world to learn about."\\
+Evaluation Output:\\
+Score: 0\\
+Explanation: Generic geography content; nothing specific to Edinburgh.\\[2pt]
+Here is the concept: \{concept\} and here is the response: \{response\}
+\end{quote}
 
 % ============================================================
 % PARKED (record / follow-up material; not for submission)
@@ -252,5 +255,5 @@ retained, so its $R^2$ cells are unavailable. V1$\cup$V6 totals: \texttt{orig} 6
 \item [--] \textbf{Design and outcome: no rescue effect.} $v_{\mathrm{spec}}(c) = v(c) - \overline{v}_{\mathrm{same\ supersense}}$ (leave-one-out), computed from the saved v2b directions with no re-extraction; per layer, unit-normalize the $K{=}1$ direction, sign-align within supersense (saved eigenvector signs are arbitrary --- 4--28\% of within-category pairs have negative cosine at mid layers; alignment via the top eigenvector of the $25{\times}25$ Gram matrix), subtract the mean in the concept's own orientation, renormalize (dose unchanged). Six supersenses $\times$ 25 (feeling, food, person, location, artifact, body --- NB this set swaps \texttt{cognition} out of the pre-specified featured six for \texttt{body}, the hardest cell; flag if the featured-cell definition is used elsewhere), all-layer default config, V1$\cup$V6; tag \texttt{Lall\_K1ev\_def\_fv2b\_r4spec}, builder \texttt{build\_r4spec\_directions.py}, RUNLOG 013. Result: 25/150 steer vs.\ 30/150 baseline; $+9$ rescued / $-14$ lost / 16 retained (vs.\ $\sim$5 expected under independence); McNemar $p \approx .4$. Per-supersense cell movements (feeling $9{\to}6$, body $2{\to}3$, \ldots) are within noise at $n{=}25$/cell and are not interpreted.
 \item [--] \textbf{Reading: shared-component dominance is not the prevailing failure mode.} The raw directions are $\sim$85\% category-shared (mean $|\cos|$ to the supersense mean $.81$--$.90$ across layers), yet removing that component flips only 9/120 failures. Masked concept-specific signal exists (\emph{beard}: baseline collapses into excited stammering, $v_{\mathrm{spec}}$ at $c{=}0.8$ yields on-topic beard-styles content; similarly \emph{hay}, \emph{fabric}, \emph{residence}) but is the exception.
 \item [?] \textbf{Side-yield (inspection-level): $v_{\mathrm{spec}}$ doubles as a frame-leak control.} Baseline all-layer outputs carry the v2b register (``*excitedly* \ldots fascinated \ldots the wonders of'') at all coefficients; $v_{\mathrm{spec}}$ outputs do not --- confirming the frame component lives in the category mean. Several lost feeling-class items (\emph{exuberance}, \emph{sulk}, \emph{mood}) had baseline ``successes'' whose outputs never mention the concept but express frame-injected enthusiasm, which the symmetric V6 judge legitimately credits as embodiment; under $v_{\mathrm{spec}}$ these evaporate into neutral assistant-speak. Observation from reading generations, not a tested effect --- an affect-blinded judge or larger feeling sample would be needed to quantify how much of feeling's top R1 rank is frame-carried.
-\item [?] \textbf{TODO (flagged in Method): re-run $v_{\mathrm{spec}}$ on the v4 directions} --- v4's constant imagine/assume prefix re-introduces a frame component into every direction; this probe is the cheap check on whether the v4 headline rates are partly frame-carried, before camera-ready.
+\item [?] Re-running $v_{\mathrm{spec}}$ on the v4 directions was considered and \textbf{decided against} (jul10); the residual frame-leak risk for the v4 headline rates is instead acknowledged in Limitations.
 \end{outline}
