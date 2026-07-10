@@ -44,11 +44,10 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{fig1_opt1.png}
-\caption{(A) Same protocol, opposite outcomes: dose-response for a steerable
-concept (\emph{frog}) vs.\ an unsteerable one (\emph{fairway}); generations from
-the neutral evaluation prompt (V6), all-layer steering, Llama-3.1-8B, v4 frame.
-(B) Concepts steered per WordNet supersense (of 25, V1$\cup$V6): steerability
-varies systematically by category.}
+\caption{Concepts steered per WordNet supersense (of 25 each; steered = judged
+as expressing the concept under either evaluation prompt, V1$\cup$V6; all-layer
+steering, v4 extraction frame): steerability varies systematically by category,
+and the rates and much of the ordering replicate across the two model families.}
 \label{fig:fig1}
 \end{figure*}
 
@@ -99,66 +98,11 @@ Steering vectors are widely used to control and interpret LLMs, yet benchmarks s
 \item \textbf{Sample ($\approx$600, flat).} 25/supersense across $\sim$24 usable supersenses; within each supersense, stratify over frequency so category and frequency are not confounded. Six supersenses are pre-specified (before extraction) as the \emph{featured} cells for within-category analyses: \texttt{location}, \texttt{person}, \texttt{feeling} (pilot continuity) and \texttt{artifact}, \texttt{cognition}, \texttt{food} (concreteness extremes). At $n{=}25$ every cell is adequately powered for class means and absorbs attrition (prompted-ceiling/judge exclusions). (1 para)
 \item \textbf{Predictors} (one table): Zipf frequency \citep{speer2018wordfreq}; concreteness \citep{brysbaert2014concreteness}; age of acquisition \citep{kuperman2012aoa}; polysemy (\#WordNet senses); supersense; log category size (\#noun synsets in the lexicographer file, covariate). Tested and null: token count, verb-sense count. (half para + table)
 \item \textbf{Contrast design.} Positives wrap a statement in a universal frame; the frame must be felicitous across \emph{all} supersenses, else frame felicity confounds category; negatives are the bare statements (benchmark-comparable). Rationale for care here: a contrast in which frame, category, and instance always co-occur cannot statistically separate them (see Pilot) --- whatever the frame adds constantly ends up inside every direction. A second negative design --- same frame with a \emph{different} same-supersense concept, which cancels frame and category parent --- is used as the causal probe (R4), not the main contrast. (1 para)
-\item \textbf{[NEW jul10] Main-run frame: v4 = ``Imagine/assume: \{c\}.''\ (constant prefix, concept unquoted; negatives bare).} Selected from a 7-frame grid on the pilot (Table~\ref{tab:framegrid}, Appendix~F): 77/90 V1$\cup$V6 vs.\ 61 (orig class-specific) and 59 (v2b dual frame) --- the only frame at ceiling on moods \emph{and} far ahead on places. Ablations attribute the gain to \emph{assume} (bare-noun reading $\approx$ role-assignment, a class-neutral persona prime) and show quoting the concept costs $\sim$7 points (mention-mode suppresses enactment). Trade-off, quantified in Appendix~F: a constant prefix re-saturates extraction $R^2$ (the prefix is a free class separator), so the dual-frame diagnostics (informative val-$r$) are given up in exchange for steering power; the frame-leak caveat transfers to the imagine/assume register (acknowledged in Limitations).
+\item \textbf{[NEW jul10] Main-run frame: v4 = ``Imagine/assume: \{c\}.''\ (constant prefix, concept unquoted; negatives bare).} Selected from a 7-frame grid on the pilot (Table~\ref{tab:framegrid}, Appendix~B): 77/90 V1$\cup$V6 vs.\ 61 (orig class-specific) and 59 (v2b dual frame) --- the only frame at ceiling on moods \emph{and} far ahead on places. Ablations attribute the gain to \emph{assume} (bare-noun reading $\approx$ role-assignment, a class-neutral persona prime) and show quoting the concept costs $\sim$7 points (mention-mode suppresses enactment). Trade-off, quantified in Appendix~B: a constant prefix re-saturates extraction $R^2$ (the prefix is a free class separator), so the dual-frame diagnostics (informative val-$r$) are given up in exchange for steering power; the frame-leak caveat transfers to the imagine/assume register (acknowledged in Limitations).
 \item \textbf{Pilot/confirmatory split.} Pilot = 90 concepts (30 each: places, moods, personalities) from the released benchmark lists, used for all exploration; the WordNet sample is confirmatory, untouched during exploration. (half para)
 \end{outline}
 
-% [NEW jul9] full frame grid (pilot 90, all-layer K=1, default coefs, gpt-oss judge;
-% numbers from RUNLOG 002-008 and 015-018; v2b V4-eval cell never run)
-\begin{table*}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llrrrrr}
-\hline
-frame & class & V1 & V4 & V6 & V1$\cup$V6 & med $R^2$ \\
-\hline
-\texttt{orig} (class-specific)
- & pers.  & 24 & 4  & 17 & 26 & .996 \\
- & moods  & 30 & 27 & 27 & 30 & .996 \\
- & places & 2  & 14 & 4  & 5  & .998 \\
-\texttt{v2} ``fascinated~/ preoccupied'', quoted
- & pers.  & 24 & 3  & 9  & 24 & .804 \\
- & moods  & 22 & 16 & 24 & 26 & .740 \\
- & places & 10 & 4  & 3  & 11 & .807 \\
-\texttt{v2b} ``fascinated~/ expert on'', quoted
- & pers.  & 22 & -- & 13 & 23 & .715 \\
- & moods  & 17 & -- & 14 & 19 & .785 \\
- & places & 14 & -- & 13 & 17 & .531 \\
-\texttt{v3} ``thinking about~/ on your mind'', quoted
- & pers.  & 18 & 0  & 8  & 20 & --  \\
- & moods  & 16 & 13 & 9  & 17 & --  \\
- & places & 7  & 9  & 5  & 8  & --  \\
-\texttt{v4} ``Imagine/assume: \{c\}.''
- & pers.  & 23 & 9  & 9  & 23 & .997 \\
- & moods  & 29 & 28 & 27 & 30 & .995 \\
- & places & 16 & 17 & 22 & 24 & .992 \\
-\texttt{v4b} ``Imagine: '\{c\}'.''\ (quoted)
- & pers.  & 20 & 2  & 10 & 23 & .997 \\
- & moods  & 19 & 20 & 14 & 22 & .986 \\
- & places & 10 & 13 & 12 & 14 & .990 \\
-\texttt{v4c} ``Imagine: \{c\}.''
- & pers.  & 23 & 4  & 10 & 25 & .997 \\
- & moods  & 28 & 27 & 24 & 28 & .993 \\
- & places & 8  & 12 & 12 & 13 & .994 \\
-\texttt{v4d} ``Imagine/consider: \{c\}.''
- & pers.  & 21 & 3  & 5  & 21 & .996 \\
- & moods  & 21 & 23 & 17 & 22 & .985 \\
- & places & 10 & 10 & 13 & 13 & .991 \\
-\hline
-\end{tabular}
-\caption{\textbf{Extraction-frame grid} (pilot $N{=}90$: 30 personalities~/
-30 moods~/ 30 places; Llama-3.1-8B, all-layer $K{=}1$, default coefficients, gpt-oss
-judge). Cells = concepts steered out of 30 under each evaluation version; V1$\cup$V6 =
-union outcome; med $R^2$ = class median of per-concept median validation $R^2$ across
-layers. Constant-prefix frames (\texttt{orig}, v4 family) saturate $R^2$ by
-construction (the prefix is a free class separator); dual frames (\texttt{v2},
-\texttt{v2b}) make $R^2$ concept-informative; \texttt{v3} direction files were not
-retained, so its $R^2$ cells are unavailable. V1$\cup$V6 totals: \texttt{orig} 61,
-\texttt{v2} 61, \texttt{v2b} 59, \texttt{v3} 45, \texttt{v4} \textbf{77},
-\texttt{v4b} 59, \texttt{v4c} 66, \texttt{v4d} 56.}
-\label{tab:framegrid}
-\end{table*}
+
 
 \section{Method (1.0p)}
 \begin{outline}
@@ -166,8 +110,8 @@ retained, so its $R^2$ cells are unavailable. V1$\cup$V6 totals: \texttt{orig} 6
 \item \textbf{Spectral metrics.} $\lambda_1/\mathrm{tr}(M)$, $\lambda_1/\lambda_2$, and the participation ratio $\mathrm{tr}(M)^2/\|M\|_F^2$; per-concept score read at a fixed relative depth (per-layer profile retained; the informative depth is model-specific --- 40\% on Llama, 60\% on Gemma). These measure the \emph{shape} of the discriminative spectrum, not concept identity (see Pilot); they are near-deterministic functions of one another ($|r| \geq .94$), so they enter analyses one at a time. (half para)
 \item \textbf{Fixed hyperparameters --- a methodological requirement.} Kernel bandwidth inflates $\lambda_1$/trace mechanically (large bandwidth $\Rightarrow$ near-linear fit $\Rightarrow$ rank-1 AGOP); grid search over near-tied validation correlations injects artifact variance into the dependent measure. All extractions at bw=1, norm=True, reg=$10^{-3}$; vector and metrics read at a fixed (converged) iteration. (half para)
 \item \textbf{Two-config steering protocol.} Each concept steered under (i) \emph{all layers}, benchmark defaults (unit vectors, released coefficient grid --- comparability); (ii) \emph{one mid layer} at $\approx$40\% depth (vector scaled by the concept's per-layer projection gap, cf.\ CAA / ITI; effective single-site dose $\approx$1$\times$ local residual-stream norm). $\Delta$(all $-$ single) measures how \emph{distributed} the concept's steerable content is --- with the caveat, added after the depth sweep, that $\Delta$ partly measures \emph{window placement}: the confirmatory single-site arm should sit at depth 15, inside the entity window. Two evaluation prompts (category-inviting V1; neutral V6; listed verbatim); greedy decoding. (1 para)
-\item \textbf{Outcome.} Primary: steered under V1 or V6 at any coefficient (binary; the union de-biases the evaluation-relativity of either prompt alone, V1--V6 $\phi{=}0.59$). Secondary: \emph{granularity reached} (category / region / instance) --- the binary criterion flattens near-misses (pilot: Edinburgh$\to$``Scottish Highlands'' scores 0); a graded rubric (V8) re-judges the same generations as a robustness check (Appendix~B). \textbf{TODO: the category/region/instance granularity coding was never systematically performed on the 600-run --- V8 partially covers it; either promote V8 to fill this role explicitly or cut the granularity promise.} \textbf{TODO: the evaluation prompts and the v4 frame are described but never listed verbatim --- add a prompts appendix (frame, V1, V6, judge templates).} (1 para)
-\item \textbf{Judge.} gpt-oss:20b (local, on the experiment GPU); symmetric judge question across supersenses. Validated against Claude Sonnet~5 on a 360-item set: 87--91\% agreement, $\kappa = .72$--$.78$; a stricter candidate (Haiku 4.5) was rejected for one-directional divergence from the two-judge consensus. Confirmatory-study additions: re-validation on $\sim$200 WordNet-distribution items + human spot-check of disagreements (Appendix~E). (half para)
+\item \textbf{Outcome.} Primary: steered under V1 or V6 at any coefficient (binary; the union de-biases the evaluation-relativity of either prompt alone, V1--V6 $\phi{=}0.59$). Secondary: \emph{granularity reached} (category / region / instance) --- the binary criterion flattens near-misses (pilot: Edinburgh$\to$``Scottish Highlands'' scores 0); a graded rubric (V8) re-judges the same generations as a robustness check (Appendix~E). \textbf{TODO: the category/region/instance granularity coding was never systematically performed on the 600-run --- V8 partially covers it; either promote V8 to fill this role explicitly or cut the granularity promise.} Verbatim prompts in Appendix~G. (1 para)
+\item \textbf{Judge.} gpt-oss:20b (local, on the experiment GPU); symmetric judge question across supersenses. Validated against Claude Sonnet~5 on a 360-item set: 87--91\% agreement, $\kappa = .72$--$.78$; a stricter candidate (Haiku 4.5) was rejected for one-directional divergence from the two-judge consensus. Confirmatory-study additions: re-validation on $\sim$200 WordNet-distribution items + human spot-check of disagreements (Appendix~F). (half para)
 \item \textbf{Controls.} Prompted ceiling (can the model express the concept when explicitly asked?) --- steerability conditional on ceiling; pipeline sanity-checked on known-good concepts per model. \textbf{TODO: the prompted-ceiling control is promised here but has not been run at $n{=}600$ --- either run it (one cheap generation pass, no steering) or cut the promise. It matters most for the bottom cells: is \texttt{noun.body} unsteerable or merely unpromptable?} (half para)
 \item \textbf{Models.} Full protocol on Llama-3.1-8B-Instruct; headline analyses replicated on Gemma-2-9B-it. (half para)
 \end{outline}
@@ -176,11 +120,11 @@ retained, so its $R^2$ cells are unavailable. V1$\cup$V6 totals: \texttt{orig} 6
 % All pilot experiments: N = 30x3 (places/moods/personalities), one 90-concept sample.
 % Behavioral arms re-run at N=90 pending; interim n=15 shakedown numbers are provisional.
 \begin{outline}
-\item \textbf{Hyper-parameter selection (summary).} Validation $r$ saturates ($\sim$0.97--0.99) across bandwidths, statement counts, and iterations $\Rightarrow$ selection by validation is third-decimal noise; large bandwidth forces rank-1 AGOP by construction; converged readout cuts metric instability 3--4$\times$. Decision rule: fixed modal setting, converged readout. Details in Appendix~A. (NB the saturation itself is frame-structural: any constant-prefix contrast hands the classifier a free separator; dual frames de-saturate val-$r$ --- Appendix~F.) (half para)
+\item \textbf{Hyper-parameter selection (summary).} Validation $r$ saturates ($\sim$0.97--0.99) across bandwidths, statement counts, and iterations $\Rightarrow$ selection by validation is third-decimal noise; large bandwidth forces rank-1 AGOP by construction; converged readout cuts metric instability 3--4$\times$. Decision rule: fixed modal setting, converged readout. Details in Appendix~A. (NB the saturation itself is frame-structural: any constant-prefix contrast hands the classifier a free separator; dual frames de-saturate val-$r$ --- Appendix~B.) (half para)
 \item \textbf{Finding 1: parent-dominance.} Different same-category concepts' extracted top-1 directions are nearly identical (places: cosine $0.97 \to 0.84 \to 0.72$ across depth; \emph{all} top-3 components $\geq$0.90 shared). Single-layer dose-response saturates at the category \emph{prototype} (every city $\to$ ``quiet beach at sunset'') with region-level near-misses (Edinburgh$\to$Dublin pub); giving secondary components injection mass adds a generic roleplay axis, not instance content. Three legs: geometry, dose-response, component ablation. Interpretation: a contrast in which frame, parent, and instance always co-occur is statistically one axis --- what steering delivers is mostly the category. (1 para + figure \texttt{parent\_share\_by\_depth.png})
 \item \textbf{Finding 2: coherence $\neq$ identity.} Places show the \emph{highest} band $\lambda_1$/trace yet fail single-layer steering; moods (lower) succeed. Spectral metrics certify that a \emph{coherent} (context-invariant, rank-1) direction was extracted --- not that it is the judged content. Consequence: their regression coefficients are expected to be conditional on contrast type; tested under both contrasts. (1 para)
 \item \textbf{Finding 3: attribute vs.\ instance.} Attribute concepts (moods) steer from one mid layer; instance identities steer only under all-layer injection, reaching region granularity --- consistent with multi-stage assembly (per-layer residue accumulation + late lexical tipping + autoregressive bootstrap once the name is emitted). Motivates the two-config protocol and $\Delta$. (1 para)
-\item \textbf{Protocol justifications} (one line each; evidence in Appendices~C--D): single mid layer in the mid-stack behavioral window --- the depth sweep (Discussion) later located it precisely at depths 14--17 for entity concepts, with the original 40\% (depth-13) site just below its onset; 60\% yields token-bias then repetition collapse. No top-$k$ arms --- the top-3 subspace under the released contrast is category-shared. Coefficient $\approx$1$\times$ local residual norm via per-layer magn scaling. Granularity as secondary outcome --- the binary judge flattens near-misses. (1 para)
+\item \textbf{Protocol justifications} (one line each; evidence in Appendix~C): single mid layer in the mid-stack behavioral window --- the depth sweep (Discussion) later located it precisely at depths 14--17 for entity concepts, with the original 40\% (depth-13) site just below its onset; 60\% yields token-bias then repetition collapse. No top-$k$ arms --- the top-3 subspace under the released contrast is category-shared. Coefficient $\approx$1$\times$ local residual norm via per-layer magn scaling. Granularity as secondary outcome --- the binary judge flattens near-misses. (1 para)
 \end{outline}
 
 \begin{figure}[t]
@@ -195,15 +139,7 @@ moods individuate.}
 
 \section{Results (1.5p)}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{steered_by_supersense_fv4.png}
-\caption{\textbf{[NEW jul10] R1: steered concepts per supersense} (of 25;
-V1$\cup$V6; Llama-3.1-8B, all-layer config), under the main v4 instrument and the
-v2b instrument-comparison arm. The frame moves the rate ($\sim$2$\times$), far less
-the ordering (feeling top, body bottom under both).}
-\label{fig:supersense}
-\end{figure*}
+
 
 \begin{figure*}[t]
 \centering
@@ -216,14 +152,14 @@ regression effects are conditional on correlated covariates).}
 \end{figure*}
 
 \begin{outline}
-\item \textbf{R1: Steerability varies systematically --- 249/600 (41.5\%) steer} (Llama, all-layer, v4 frame, judge = gpt-oss; V1 191, V6 195, union V1$\cup$V6; Figure~\ref{fig:supersense}). Per-supersense spread 2--21 of 25: top \texttt{noun.feeling} (21), \texttt{noun.person} (17), \texttt{noun.animal} (16); bottom \texttt{noun.body} (2), \texttt{noun.shape} (4), \texttt{noun.quantity}/\texttt{noun.relation} (5). (1 para + figure)
-\item \textbf{R1 instrument comparison (v2b arm): the frame moves the rate, much less the ordering.} Under the dual v2b frame the same protocol yields 119/600 (19.8\%; spread 2--9); switching to v4 improves 22 of 24 supersenses while the ranking stays broadly stable (feeling top, body bottom under both; \texttt{noun.body} immovable at 2/25). V1--V6 agreement $\phi = 0.59$ --- measured steerability is partly evaluation-relative, motivating the union outcome. (half para)
+\item \textbf{R1: Steerability varies systematically --- 249/600 (41.5\%) steer} (Llama, all-layer, v4 frame, judge = gpt-oss; V1 191, V6 195, union V1$\cup$V6; Figure~\ref{fig:fig1}). Per-supersense spread 2--21 of 25: top \texttt{noun.feeling} (21), \texttt{noun.person} (17), \texttt{noun.animal} (16); bottom \texttt{noun.body} (2), \texttt{noun.shape} (4), \texttt{noun.quantity}/\texttt{noun.relation} (5). (1 para + figure)
+\item \textbf{R1 instrument comparison (v2b arm): the frame moves the rate, much less the ordering.} Under the dual v2b frame the same protocol yields 119/600 (19.8\%; spread 2--9); switching to v4 improves 22 of 24 supersenses while the ranking stays broadly stable (feeling top, body bottom under both; \texttt{noun.body} immovable at 2/25; Figure~\ref{fig:supersense}, Appendix~B). V1--V6 agreement $\phi = 0.59$ --- measured steerability is partly evaluation-relative, motivating the union outcome. (half para)
 \item \textbf{R2: Psycholinguistic predictors (Table~\ref{tab:reg600v4}): all four lexical predictors significant, same signs in both models.} Llama: conc $-0.20^{*}$, zipf $+0.28^{*}$, AoA $-0.33^{**}$, polysemy $-0.30^{**}$; Gemma: conc $-0.20^{*}$, zipf $+0.23^{\dagger}$, AoA $-0.49^{**}$, polysemy $-0.35^{**}$. \textbf{The pilot expectation (concreteness $+$, polysemy carrying the signal, frequency null) is rejected: frequent-but-abstract concepts steer best.} AoA and polysemy were null under v2b and surface once the instrument improves (v2b: zipf $+0.40^{*}$, conc $-0.28^{*}$; Appendix~B). Honest-reporting nuance (Figure~\ref{fig:covariates}): polysemy and concreteness do \emph{not} separate univariately (MW $p{>}.6$; effects conditional on correlated covariates); zipf, AoA, PR separate cleanly in both models ($p{<}.005$). Collinearity among lexical predictors is benign (conc--zipf $r{=}.09$; VIF $<2.7$). Log category size is a positive predictor in Llama ($+0.31^{**}$ with the lexical block; $+0.21^{*}$ surviving PR) but null in Gemma ($-0.01$) --- reported as a non-replicating candidate, not among the laws. (1 para + table)
-\item \textbf{R3: Spectral metrics: every spectral metric carries signal, and each alone beats the whole lexical block.} Llama, one-at-a-time: $\lambda_1$/trace $+0.55^{**}$ (AIC 778.5), $\lambda_1/\lambda_2$ $+0.57^{**}$ (775.3), PR $-0.49^{**}$ (786.5) vs.\ lexical block 799.0, null 816.4; best model lex$+$PR (763.6, PR $-0.62^{**}$). Concentrated discriminative spectra steer; polysemy is largely absorbed by PR in the joint model --- polysemous words appear to fail \emph{via} diffuse spectra. \textbf{Instrument caution (one of our sharpest methodological findings): under the dual v2b frame $\lambda_1$/trace was \emph{null} --- the register axis parked in within-positive variance can capture the top eigenvector for weak concepts (Appendix~F), corrupting spectral readouts. Spectral diagnostics are only interpretable relative to the contrast design.} Spectral metrics are near-collinear ($r{\le}-.94$): one-at-a-time only. (1 para)
+\item \textbf{R3: Spectral metrics: every spectral metric carries signal, and each alone beats the whole lexical block.} Llama, one-at-a-time: $\lambda_1$/trace $+0.55^{**}$ (AIC 778.5), $\lambda_1/\lambda_2$ $+0.57^{**}$ (775.3), PR $-0.49^{**}$ (786.5) vs.\ lexical block 799.0, null 816.4; best model lex$+$PR (763.6, PR $-0.62^{**}$). Concentrated discriminative spectra steer; polysemy is largely absorbed by PR in the joint model --- polysemous words appear to fail \emph{via} diffuse spectra. \textbf{Instrument caution (one of our sharpest methodological findings): under the dual v2b frame $\lambda_1$/trace was \emph{null} --- the register axis parked in within-positive variance can capture the top eigenvector for weak concepts (Appendix~B), corrupting spectral readouts. Spectral diagnostics are only interpretable relative to the contrast design.} Spectral metrics are near-collinear ($r{\le}-.94$): one-at-a-time only. (1 para)
 \item \textbf{Category is partly mediated by measurable word properties.} Supersense dummies beat the null (AIC 784.1 vs.\ 816.4) but lose to lexical$+$PR (763.6), and adding them to the best model does not pay: the category signal visible in R1 is substantially carried by the continuous predictors. (Under v2b the dummies did not even beat the null; the wider v4 spread carries real categorical signal.) (half para)
 \item \textbf{R4: The rescue probe (causal).} Design: for failing concepts, cancel the frame/parent component --- either by re-extracting with within-category contrasts (``loves Edinburgh'' vs.\ ``loves \{other city\}''; not yet run) or by subtracting the leave-one-out supersense mean from the saved direction ($v_{\mathrm{spec}}$; executed, $n{=}150$). \textbf{Outcome: no net rescue (25 vs.\ 30 of 150 steer; McNemar $p{\approx}.4$) --- shared-component dominance is not the prevailing failure mode, though the subtraction doubles as a frame-leak control. Details moved to Appendix~Z3 [bold note: full $v_{\mathrm{spec}}$ material relocated there; inclusion in the final submission undecided].} (1 para)
 \item \textbf{R5: Distributedness.} $\Delta$(all-layer $-$ single-layer): single-layer depth-13 (magn dose) 90/600 (15.0\%) vs.\ all-layer 249 (41.5\%), ratio 2.8$\times$ (v2b: 3.5$\times$); 11 concepts steer \emph{only} single-layer (over-steer rescues; abstract/attribute skew). Caveat from the depth sweep: depth 13 sits below the entity window, so $\Delta$ partly measures window placement --- interpret jointly with the sweep (Discussion). (half para)
-\item \textbf{R6: Generality (Gemma-2-9B replication): rates and laws replicate; item convergence is itself instrument-dependent.} Rates: 224/600 (37.3\%) vs.\ Llama 249 (41.5\%); the v4 gain replicates ($\sim$2$\times$ both models' v2b rates). Laws: all four lexical signs replicate (AoA $-0.49^{**}$ strongest); PR replicates \emph{at Gemma's informative depth} (60--70\%: $-0.42^{**}$; null at Llama's 40\% convention) --- \emph{same law, model-specific depth}. Items: per-concept $\phi = 0.43$ (154 shared) and supersense-profile $r = 0.44$, both up from v2b (0.33 / 0.12 n.s.): part of the earlier item-divergence was instrument noise, though which concepts steer remains substantially model-relative (Gemma tops: event/phenomenon/group; body bottom in both). Supporting pilot evidence: the $\lambda_1$/trace class ordering \emph{inverts} across models (Llama places $>$ moods; Gemma the reverse) --- spectral values are model-geometry-laden; compare within-model only. Gemma dose grid [14,17,20,23] set by dose-response audit (Appendix~D). (1 para)
+\item \textbf{R6: Generality (Gemma-2-9B replication): rates and laws replicate; item convergence is itself instrument-dependent.} Rates: 224/600 (37.3\%) vs.\ Llama 249 (41.5\%); the v4 gain replicates ($\sim$2$\times$ both models' v2b rates). Laws: all four lexical signs replicate (AoA $-0.49^{**}$ strongest); PR replicates \emph{at Gemma's informative depth} (60--70\%: $-0.42^{**}$; null at Llama's 40\% convention) --- \emph{same law, model-specific depth}. Items: per-concept $\phi = 0.43$ (154 shared) and supersense-profile $r = 0.44$, both up from v2b (0.33 / 0.12 n.s.): part of the earlier item-divergence was instrument noise, though which concepts steer remains substantially model-relative (Gemma tops: event/phenomenon/group; body bottom in both). Supporting pilot evidence: the $\lambda_1$/trace class ordering \emph{inverts} across models (Llama places $>$ moods; Gemma the reverse) --- spectral values are model-geometry-laden; compare within-model only. Gemma dose grid [14,17,20,23] set by dose-response audit (Appendix~C). (1 para)
 \end{outline}
 
 % v2b-instrument regression table moved to Appendix B (tab:reg600).
@@ -262,7 +198,7 @@ one-at-a-time only. $^{\dagger}p{<}.1$, $^{*}p{<}.05$, $^{**}p{<}.01$.}
 \section{Discussion (1.0p)}
 \begin{outline}
 \item What makes a concept steerable: attributes (context-general colorings) admit a single injectable direction; instance identities require assembled, multi-stage content --- steering failure is usually \emph{delivery of the parent category}, not silence. (1 para)
-\item \textbf{What the spectral metrics are: an intervention-match score, with an instrument caveat.} Spectrum \emph{concentration} (low PR / high $\lambda_1$-share) measures how well the concept's discriminative signature fits the one move single-vector steering can make (one constant vector, all contexts); it predicts steering in both models. \textbf{The mechanism behind R2's reversal: \emph{abstract} (not concrete) concepts steer better} --- for concrete instance-like concepts the dominant direction is largely the shared category axis, so its coherence does not deliver the instance (parent-dominance). \textbf{And the caveat: spectral diagnostics of extracted directions are only interpretable relative to the contrast design that produced them} --- under the dual v2b frame $\lambda_1$/trace read as null because a frame-register axis could capture the top eigenvalue slot (Appendix~F); under the constant v4 prefix it predicts steering with the expected sign. (1 para)
+\item \textbf{What the spectral metrics are: an intervention-match score, with an instrument caveat.} Spectrum \emph{concentration} (low PR / high $\lambda_1$-share) measures how well the concept's discriminative signature fits the one move single-vector steering can make (one constant vector, all contexts); it predicts steering in both models. \textbf{The mechanism behind R2's reversal: \emph{abstract} (not concrete) concepts steer better} --- for concrete instance-like concepts the dominant direction is largely the shared category axis, so its coherence does not deliver the instance (parent-dominance). \textbf{And the caveat: spectral diagnostics of extracted directions are only interpretable relative to the contrast design that produced them} --- under the dual v2b frame $\lambda_1$/trace read as null because a frame-register axis could capture the top eigenvalue slot (Appendix~B); under the constant v4 prefix it predicts steering with the expected sign. (1 para)
 \item \textbf{Measured steerability is instrument-dependent --- and so is cross-model generality.} Changing one frame sentence doubles the steerable share in both models (19.8$\to$41.5\% Llama; 18.8$\to$37.3\% Gemma) and \emph{raises} cross-model item agreement ($\phi$ 0.33$\to$0.43) and category-profile agreement ($r$ 0.12$\to$0.44). Absolute rates from any single protocol should not be read as properties of the model alone; but the \emph{laws} (frequency $+$, concreteness $-$, AoA $-$, polysemy $-$, spectrum concentration $-$) survive instrument change and model change, which is the paper's strongest generality claim. (half para)
 \item \textbf{Depth structure: concepts live in depth windows, ordered by abstractness.} Attributes are injectable from $\sim$30\% depth onward with a broad plateau; entity identities switch on sharply at $\sim$45\% (window 14--17 of 32) and fade late; personas need multi-site injection. One well-chosen layer nearly matches all-layer steering (71 vs.\ 77 of 90) --- ``all layers'' mostly buys window coverage. Read-side extraction statistics do not locate the window (they miss the late decline entirely): injectability is a write property. (half para)
 \item Status of extracted vectors: the residual stream has no privileged basis, so extracted directions are \emph{experiment-relative}; within-model relational claims are valid, coordinate-level and raw cross-model comparisons are not. Anchored spaces (embedding/unembedding, MLP neurons) are where mechanism pins a frame. (half para)
@@ -275,15 +211,7 @@ one-at-a-time only. $^{\dagger}p{<}.1$, $^{*}p{<}.05$, $^{**}p{<}.01$.}
 % WHERE in depth it becomes injectable is a second, near-orthogonal axis.
 % Executed on the pilot; WordNet extension is future work.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{depth_sweep_fv4.png}
-\caption{\textbf{[NEW jul10] Retention by steered depth} (pilot 90, v4
-directions, single-layer magn dose). Attributes (moods) steer shallow and
-everywhere; entity identities (places) switch on sharply at depth 14 (of 32),
-window 14--17; personas never find a single-layer home.}
-\label{fig:depthsweep}
-\end{figure}
+
 
 \begin{outline}
 \item \textbf{Design.} Pilot 90 (moods/places/personalities) $\times$ every single-layer depth 10--19, magn dose, v4 directions, V1$\cup$V6 (Figure~\ref{fig:depthsweep}). (half para)
