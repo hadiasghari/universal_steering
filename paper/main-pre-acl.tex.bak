@@ -1,0 +1,307 @@
+% ============================================================
+% BlackboxNLP 2026 submission — working draft
+% Rewritten july3 (streamlined arc); previous version: main-old.tex.bak
+%
+% Build: pdflatex main / latexmk -pdf main
+% NOTE: plain article class for drafting. Before submission switch to the
+% official ACL style (acl-style-files); BlackboxNLP uses the ACL template.
+%
+% Convention: the abstract is prose (Hadi's); everything else is \outline{}
+% bullets that Hadi converts to prose. Claude maintains structure/refs/numbers.
+% Page budgets in section headings (X.Xp) assume ACL LONG format: 8 pages of
+% content + unlimited Limitations/references. Current allocation ~8.5p counted
+% -> trim ~0.5p in the prose pass (Background and Pilot are the flex).
+% Bullet tags: (half para) / (1 para) / (2 paras) = target length in prose.
+%
+% Narrative arc: phenomenon (unexplained steering variance) -> inventory
+% (~600 concepts, 24 supersenses, dual contrasts) -> two-config steering ->
+% regression (which concepts steer) -> pilot interpretation (parent-dominance;
+% coherence != identity) -> causal probe (within-category rescue).
+% ============================================================
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\usepackage{natbib}
+\usepackage[normalem]{ulem}  % \sout{...} available; convention: strike, don't delete
+\usepackage{graphicx}
+\graphicspath{{../plots/}}  % figures live in repo-root plots/
+
+% outline bullets render gray so they're visually distinct from prose
+\newenvironment{outline}{\color{gray!70!black}\begin{itemize}[leftmargin=1.2em,itemsep=1pt]}{\end{itemize}\color{black}}
+
+\title{Not Every Concept Is a Direction:\\
+Which Lexicalized Concepts Can Be Steered in LLMs?
+\thanks{Working title. Alternative: ``Concreteness and Polysemy Predict the Steerability of Lexicalized Concepts'' (use if R2 confirms). \textbf{[NEW jul6] R2 did NOT confirm: polysemy is null and concreteness is negative; frequency is the positive predictor. Do not use the alternative title.}}}
+\author{Hadi Asghari \and ...}
+\date{Draft of \today}
+
+\begin{document}
+\maketitle
+
+% [NEW jul10] Figure 1 candidate (option 1 of 3; opts 2-3 in plots/). Panel data
+% still from the v2b run -- regenerate for v4 before submission.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig1_opt1.png}
+\caption{\textbf{[Figure 1 candidate --- data to be regenerated for the v4 run.]}
+(A) Same protocol, opposite outcomes: dose-response for a steerable concept
+(\emph{frog}) vs.\ an unsteerable one (\emph{fairway}). (B) Share of concepts
+steered per WordNet supersense (V1$\cup$V6). Options 2 (cross-model scatter) and
+3 (pipeline schematic) in \texttt{plots/fig1\_opt\{2,3\}.png}.}
+\label{fig:fig1}
+\end{figure*}
+
+\begin{abstract} % (0.5p incl. title block)
+Steering vectors are widely used to control and interpret LLMs, yet benchmarks show that some concepts steer reliably while others barely respond --- a variance that is reported but rarely explained. In this research we investigate which kinds of concepts are steerable in Llama-3.1-8B and Gemma-2-9B. We use the RFM method to extract steering vectors (or directions) for approximately 600 concepts drawn from 24 WordNet supersense categories, and validate which of them successfully steer the model. We then build a regression model explaining steerability from concept category, concreteness, polysemy, and word frequency, as well as the share of the top eigenvector during extraction ($\lambda_1$/trace). The results help distinguish concepts that behave as single directions --- ``primitive'' for the model --- from those that are composite or context-dependent, and offer practitioners an extraction-time indication of when single-vector steering can be trusted.
+
+\begin{outline}
+\item \textbf{[NEW jul10, supersedes jul6 headline] Main run REDONE with the improved v4 extraction frame (``Imagine/assume: \{c\}.''): 41.5\% of the 600 concepts steer on Llama (249/600, V1$\cup$V6) and 37.3\% on Gemma (224/600) --- more than double the v2b rates --- and the psycholinguistic laws now replicate across BOTH models with all four predictors significant: frequency $+$, concreteness $-$, age-of-acquisition $-$, polysemy $-$. Spectrum concentration (PR) predicts steerability within both models, at model-specific depths. Frequent, early-acquired, monosemous, abstract concepts steer best.}
+\item \textbf{[NEW jul6, superseded] v2b-instrument headline (kept for the instrument-comparison story): 119/600 (19.8\%); zipf $+0.40^{*}$, conc $-0.28^{*}$; polysemy and AoA null under v2b.}
+\item Candidate sentence once results are in (pilot expectation): concreteness and polysemy --- \emph{not} frequency --- predict steerability; the frequency null is itself a finding. (1 sentence)
+\item Candidate sentence (pilot mechanism): when steering fails, it fails informatively --- single-vector steering delivers the concept's \emph{category prototype} (a city steers to ``a beloved place'', not to itself). (1 sentence)
+\item Candidate sentence (causal probe): re-extracting with within-category contrasts tests whether such failures lie in the extraction design rather than the model. (1 sentence)
+\item Candidate sentence (replication): findings replicate across two model families (Llama, Gemma). (1 sentence)
+\end{outline}
+\end{abstract}
+
+\section{Introduction (1.0p)}
+\begin{outline}
+\item Hook: steering/RePE papers throw heterogeneous concept lists at models; some concepts steer at 90\%, others at chance. The variance is treated as noise; we argue it is signal. (1 para)
+\item The implicit assumption of top-1 eigenvector / PCA-1 / difference-of-means steering: the concept is representable as \emph{one direction}, injectable with \emph{one coefficient}, at whatever layer(s) the method uses. (half para)
+\item Existing evidence that not all features are one-dimensional (Engels et al.) --- but no one has asked \emph{which} concepts behave as single directions, or whether this aligns with human semantic structure. (half para)
+\item Our question: is steerability systematic and predictable from the linguistic properties of the word --- and what does a steering failure actually consist of? (half para)
+\item Contributions (short lead-in + three numbered items, 2--3 sentences each): (1 para)
+  \begin{itemize}
+  \item C1: a systematic steerability study --- $\sim$600 lexicalized concepts across 24 WordNet supersenses, annotated with psycholinguistic norms, steered under a controlled two-configuration protocol; per-concept results and code released.
+  \item C2: a regression explaining steerability variance from concept category, concreteness, polysemy, and frequency, with extraction-internal spectral metrics ($\lambda_1$/trace, $\lambda_1/\lambda_2$) as candidate zero-cost predictors.
+  \item C3: a mechanistic account of what failure looks like, grounded in pilot diagnostics (parent-dominance of extracted directions; coherence $\neq$ identity) and tested with one causal probe (within-category contrast rescue).
+  \end{itemize}
+\end{outline}
+
+\section{Background and Related Work (1.0p)}
+% Convention per bullet: cited line(s) + one closing sentence on same-vs-different.
+\begin{outline}
+\item \textbf{Linear representation hypothesis and steering.} Park et al.; RepE (Zou et al.); CAA (Panickssery/Rimsky et al.); ActAdd (Turner et al.); ITI (Li et al.); the RFM/universal-steering benchmark we build on (Beaglehole et al.\ 2026) --- kernel ridge + AGOP metric learning, top eigenvector as steering vector. \emph{Ours:} we adopt this family's method (RFM) unchanged, but instead of proposing a steering technique we ask \emph{which concepts} the technique works for and why. \textbf{[NEW jul10]} A second relation emerged: this literature's success rates are \emph{instrument-relative} --- changing one sentence of the extraction contrast doubles the steerable share (19.8\%$\to$41.5\%) on the \emph{same} method, model, and judge; benchmark comparisons that vary methods while hand-tuning per-class prompts inherit this confound (our per-class frame grid quantifies it). (1 para)
+\item \textbf{Multi-dimensional features.} Engels et al.\ (not all features are one-dimensional; circular features); feature splitting in SAEs; conceptors / subspace steering. \emph{Ours:} same premise (one direction may not suffice), but we test it at the level of a stratified concept inventory and connect it to word properties rather than to individual features. \textbf{[NEW jul10]} Result: how concentrated a concept's discriminative spectrum is (participation ratio / $\lambda_1$-share) predicts steering success in both models --- ``effectively one-dimensional'' is a measurable, graded property, and polysemy appears to act on steerability \emph{through} it. (half para)
+\item \textbf{[NEW jul6] Hierarchical concept geometry --- must cite.} Park, Choe, Jiang \& Veitch (ICLR 2025, arXiv:2406.01506): $\sim$900 WordNet concepts on Llama-3 and Gemma; categorical concepts are simplices and hierarchically related concepts occupy \emph{orthogonal} subspaces. The representational-geometry twin of this study (same inventory source, same model families). \emph{Ours:} they characterize how the hierarchy is \emph{encoded}; we test what the hierarchy predicts about \emph{intervention} --- and our parent-dominance finding (extraction returns the shared category axis) is the steering-side counterpart of their parent/child orthogonal decomposition. \textbf{[NEW jul10]} R4 (averaging variant) has now run: subtracting the shared category axis does \emph{not} rescue failed concepts (9 gained / 14 lost of 150) --- consistent with their orthogonality result read causally: the child-specific residual exists but is rarely independently injectable; the shared axis also carries the steering \emph{drive}. (half para)
+\item \textbf{Predicting steerability.} LAP / logit-lens accessibility (Billa 2026); ``When is your LLM steerable?''; (un)reliability of steering vectors. \emph{Ours:} these predict from engineering signals; we predict from the \emph{linguistic structure} of the concept, and additionally explain what the failure mode consists of. \textbf{[NEW jul10]} Our lexical laws (frequency $+$, concreteness $-$, AoA $-$, polysemy $-$) replicate across two model families and two extraction instruments --- portable, human-interpretable predictors that engineering-signal approaches cannot supply; conversely we contribute a caution their framing lacks: \emph{geometric} predictors are only interpretable relative to the contrast design (our $\lambda_1$-share flipped from null to significant when the frame changed). (half para)
+\item \textbf{[NEW jul6] Add cites here:} (a) ``Understanding (Un)Reliability of Steering Vectors in Language Models'' (arXiv:2505.22637) --- directional agreement between per-example activation differences and the steering vector predicts steerability; (b) its 2026 follow-up on \emph{geometric predictors} of steering unreliability (arXiv:2602.17881) --- closest neighbor to our R3; differentiate: they predict from activation geometry, we from the concept's linguistic structure plus extraction-time spectra, and we characterize the failure mode (parent delivery). (c) AxBench (arXiv:2501.17148) --- the standard large-scale steering evaluation (prompting/finetuning baselines beat SAE steering); one line positioning our judge protocol and per-concept inventory relative to it. \textbf{[NEW jul10]} Positioning vs.\ AxBench sharpened: their Concept500 samples concepts \emph{from the model} (SAE-latent labels --- pre-selected to be represented, no lexical norms, no category stratification) and varies \emph{methods}; we sample from the \emph{lexicon} (WordNet-stratified, normed) and hold the method fixed --- complementary designs, and ours is the one that can ask which kinds of concepts steer. Their trained ReFT-r1 also marks a boundary of our claims: ``unsteerable'' here means \emph{extraction-based rank-1} steering fails; a supervised intervention might rescue some failures.
+\item \textbf{Causal identification of concept vectors.} Function vectors (Todd et al.\ 2024); linear relation embeddings (Hernandez et al.\ 2024); ROME (Meng et al.) --- identification by \emph{intervention}. \emph{Ours:} complementary --- we identify by \emph{contrast design} and use one intervention-style probe (R4, now executed: no net rescue) to arbitrate when the contrast is at fault. \textbf{[NEW jul10]} The depth sweep adds a second point of contact with ROME's causal traces: entity content becomes injectable in a sharp mid-stack window (depths 14--17 of 32), mirroring where causal tracing localizes subject enrichment --- read-side and write-side localization agree on \emph{where}, while our sweep shows read-side statistics cannot substitute for write-side tests. (half para)
+\item \textbf{Frequency and linear representations.} Co-occurrence thresholds for linear representations; long-tail knowledge (Kandpal et al.). \emph{Ours:} we test the frequency hypothesis directly. \textbf{[NEW jul10] Outcome reversed from the pilot expectation:} frequency is a robust \emph{positive} predictor in both models --- consistent with co-occurrence-threshold accounts (more exposure $\Rightarrow$ cleaner linear structure) rather than with our pilot's ``exposure alone buys nothing.'' The frequency effect thins when spectrum concentration enters the model, suggesting exposure works partly \emph{through} representational consolidation. (half para)
+\item \textbf{LLM--human concept alignment and psycholinguistic norms.} Concreteness/AoA norms in NLP; Shani et al.\ 2025 (``From Tokens to Thoughts'', arXiv:2505.17117): LLMs trade compression for meaning differently than humans, measured on \emph{input-side} token embeddings vs.\ human categories. \emph{Ours:} same alignment question, but measured mid-stream and \emph{causally} --- does human semantic structure predict what can be steered, not just how embeddings cluster. \textbf{[NEW jul10]} Answer: yes, and the psycholinguistic profile is coherent --- words acquired \emph{early} by humans and used frequently are the most steerable, over and above frequency (AoA $\beta{=}-0.33$/$-0.49$ across models); human acquisition order tracks which concepts LLMs consolidate into injectable directions. (half para)
+\item \textbf{Methodological caution on cosine.} You 2025 (``Semantics at an Angle'', arXiv:2504.16318): cosine similarity can mislead in anisotropic learned spaces (a shared dominant component inflates all similarities). \emph{Ours:} our geometry claims rest on \emph{differential} cosines under identical measurement (within-class 0.84 vs.\ between-class 0.35 vs.\ moods 0.46), with the between-class value reported as the anisotropy control; mid-stream RMSNorm anchors the metric. (half para)
+\item Gap statement: no work connects concept-level semantic structure (concreteness, polysemy, taxonomic class) to steering outcome, nor explains what an unsteerable concept's failure consists of. \textbf{[NEW jul10]} This paper's answer, in one sentence each: (i) frequency, age-of-acquisition, polysemy, and concreteness jointly predict steerability, replicating across Llama and Gemma; (ii) failure is usually \emph{informative} --- delivery of the category/frame blend, a diffuse discriminative spectrum, or injection outside the concept's depth window --- not silence. (half para)
+\end{outline}
+
+\section{Defining and Sampling Concepts (1.0p)}
+\begin{outline}
+\item \textbf{Operational definition.} Sidestep the philosophical debate (Murphy 2002; Margolis \& Laurence 1999): a \emph{lexicalized concept} = a meaning a speech community assigned a word to, operationalized as a WordNet synset; each word mapped to its dominant (first) noun sense. (half para)
+\item \textbf{Inventory.} All single-word, noun-dominant lemmas from WordNet; category = supersense (26 lexicographer files; Miller 1990; Fellbaum 1998; ``supersense'': Ciaramita \& Johnson 2003). Exclusions: \texttt{noun.Tops}; POS-ambiguous lemmas; small cells sampled exhaustively and flagged. (half para)
+\item \textbf{Sample ($\approx$600, flat).} 25/supersense across $\sim$24 usable supersenses; within each supersense, stratify over frequency so category and frequency are not confounded. Six supersenses are pre-specified (before extraction) as the \emph{featured} cells for within-category analyses: \texttt{location}, \texttt{person}, \texttt{feeling} (pilot continuity) and \texttt{artifact}, \texttt{cognition}, \texttt{food} (concreteness extremes). At $n{=}25$ every cell is adequately powered for class means and absorbs attrition (prompted-ceiling/judge exclusions). (1 para)
+\item \textbf{Predictors} (one table): Zipf frequency (wordfreq); concreteness (Brysbaert et al.\ 2014); age of acquisition (Kuperman et al.\ 2012); polysemy (\#WordNet senses); taxonomic depth (covariate); supersense; log category size (covariate). (half para + table)
+\item \textbf{Contrast design.} Positives wrap a statement in a persona frame; the frame must be felicitous across \emph{all} supersenses (e.g.\ ``You are fascinated by \{concept\}''), else frame felicity confounds category. \emph{Dual negatives}: (i) bare statement (benchmark-comparable); (ii) same frame with a \emph{different} concept --- free, since those prompts are other concepts' positives --- which cancels the frame axis, and with same-supersense negatives also the category parent. Rationale: a contrast in which frame, category, and instance always co-occur cannot statistically separate them (see Pilot). (1 para)
+\item \textbf{[NEW jul10] Main-run frame: v4 = ``Imagine/assume: \{c\}.''\ (constant prefix, concept unquoted; negatives bare).} Selected from a 7-frame grid on the pilot (Table~\ref{tab:framegrid}, Appendix~F): 77/90 V1$\cup$V6 vs.\ 61 (orig class-specific) and 59 (v2b dual frame) --- the only frame at ceiling on moods \emph{and} far ahead on places. Ablations attribute the gain to \emph{assume} (bare-noun reading $\approx$ role-assignment, a class-neutral persona prime) and show quoting the concept costs $\sim$7 points (mention-mode suppresses enactment). Trade-off, quantified in Appendix~F: a constant prefix re-saturates extraction $R^2$ (the prefix is a free class separator), so the dual-frame diagnostics (informative val-$r$) are given up in exchange for steering power; the frame-leak caveat (R4) transfers to the imagine/assume register. \textbf{TODO: re-run the $v_{\mathrm{spec}}$ subtraction check on the v4 directions before camera-ready.}
+\item \textbf{Pilot/confirmatory split.} Pilot = 90 concepts (30 each: places, moods, personalities) from the released benchmark lists, used for all exploration; the WordNet sample is confirmatory, untouched during exploration. (half para)
+\end{outline}
+
+\section{Method (1.0p)}
+\begin{outline}
+\item \textbf{Direction extraction (RFM) --- and why RFM.} Per layer: kernel ridge regression on concept-vs-negative prompts; AGOP $M = \mathbb{E}[\nabla f \nabla f^{\top}]$; steering vector = top eigenvector of $M$. Chosen among RepE methods because (a) it is the method of the benchmark we build on (comparability); (b) unlike difference-of-means or PCA-1 it returns the \emph{full discriminative spectrum} with eigenvalues --- the spectral metrics below come for free, and the method is self-diagnosing (the pilot's confound was discovered through them); (c) its steering performance matches or beats the simpler extractors on the released benchmark. (1 para)
+\item \textbf{Spectral metrics.} $\lambda_1/\mathrm{tr}(M)$ and $\lambda_1/\lambda_2$; per-concept score = band average over decoder depth 4--24 (per-layer profile retained). These measure the \emph{coherence} of the extracted signature, not concept identity (see Pilot). (half para)
+\item \textbf{Fixed hyperparameters --- a methodological requirement.} Kernel bandwidth inflates $\lambda_1$/trace mechanically (large bandwidth $\Rightarrow$ near-linear fit $\Rightarrow$ rank-1 AGOP); grid search over near-tied validation correlations injects artifact variance into the dependent measure. All extractions at bw=1, norm=True, reg=$10^{-3}$; vector and metrics read at a fixed (converged) iteration. (half para)
+\item \textbf{Two-config steering protocol.} Each concept steered under (i) \emph{all layers}, benchmark defaults (unit vectors, released coefficient grid --- comparability); (ii) \emph{one mid layer} ($\approx$40\% depth; vector scaled by the concept's per-layer projection gap, cf.\ CAA / ITI; effective single-site dose $\approx$1$\times$ local residual-stream norm). $\Delta$(all $-$ single) measures how \emph{distributed} the concept's steerable content is. 3 category-neutral prompts (listed verbatim); greedy decoding. (1 para)
+\item \textbf{Outcome.} Primary: fraction of (coef $\times$ prompt) cells judged as expressing the concept; explicitly \emph{not} max-over-coefficients. Secondary: \emph{granularity reached} (category / region / instance) --- the binary criterion flattens near-misses (pilot: Edinburgh$\to$``Scottish Highlands'' scores 0). (1 para)
+\item \textbf{[NEW jul6] Graded judge (V8).} The 600-run generations show systematic sub-threshold movement the binary judge cannot credit (ragtime $\to$ lyre/melody imagery; candlepower $\to$ binoculars/glint): a graded rubric (1.0 named / 0.75 immediate field / 0.5 category level / 0.25 trace / 0 unrelated) re-judges the same generations and yields a continuous steerability outcome for the regression (thin-tail fix: only 119/600 binary positives).
+\item \textbf{Judge.} gpt-oss:20b (local, on the experiment GPU); symmetric judge question across supersenses. Validated against Claude Sonnet~5 on a 360-item set: 87--91\% agreement, $\kappa = .72$--$.78$; a stricter candidate (Haiku 4.5) was rejected for one-directional divergence from the two-judge consensus. Confirmatory-study additions: re-validation on $\sim$200 WordNet-distribution items + human spot-check of disagreements (Appendix~E). (half para)
+\item \textbf{Controls.} Prompted ceiling (can the model express the concept when explicitly asked?) --- steerability conditional on ceiling; pipeline sanity-checked on known-good concepts per model. (half para)
+\item \textbf{Models.} Full protocol on Llama-3.1-8B-Instruct; headline analyses replicated on Gemma-2-9B-it. (half para)
+\end{outline}
+
+\section{Pilot Diagnostics and Protocol Selection (1.0p)}
+% All pilot experiments: N = 30x3 (places/moods/personalities), one 90-concept sample.
+% Behavioral arms re-run at N=90 pending; interim n=15 shakedown numbers are provisional.
+\begin{outline}
+\item \textbf{Hyper-parameter selection (summary).} Validation $r$ saturates ($\sim$0.97--0.99) across bandwidths, statement counts, and iterations $\Rightarrow$ selection by validation is third-decimal noise; large bandwidth forces rank-1 AGOP by construction; converged readout cuts metric instability 3--4$\times$. Decision rule: fixed modal setting, converged readout. Details in Appendix~A. (half para)
+\item \textbf{Finding 1: parent-dominance.} Different same-category concepts' extracted top-1 directions are nearly identical (places: cosine $0.97 \to 0.84 \to 0.72$ across depth; \emph{all} top-3 components $\geq$0.90 shared). Single-layer dose-response saturates at the category \emph{prototype} (every city $\to$ ``quiet beach at sunset'') with region-level near-misses (Edinburgh$\to$Dublin pub); giving secondary components injection mass adds a generic roleplay axis, not instance content. Three legs: geometry, dose-response, component ablation. Interpretation: a contrast in which frame, parent, and instance always co-occur is statistically one axis --- what steering delivers is mostly the category. (1 para + figure \texttt{parent\_share\_by\_depth.png})
+\item \textbf{Finding 2: coherence $\neq$ identity.} Places show the \emph{highest} band $\lambda_1$/trace yet fail single-layer steering; moods (lower) succeed. Spectral metrics certify that a \emph{coherent} (context-invariant, rank-1) direction was extracted --- not that it is the judged content. Consequence: their regression coefficients are expected to be conditional on contrast type; tested under both contrasts. (1 para)
+\item \textbf{Finding 3: attribute vs.\ instance.} Attribute concepts (moods) steer from one mid layer; instance identities steer only under all-layer injection, reaching region granularity --- consistent with multi-stage assembly (per-layer residue accumulation + late lexical tipping + autoregressive bootstrap once the name is emitted). Motivates the two-config protocol and $\Delta$. (1 para)
+\item \textbf{Protocol justifications} (one line each; evidence in Appendices~C--D): single mid layer at $\approx$40\% depth --- wide behavioral window there; 60\% yields token-bias then repetition collapse. No top-$k$ arms --- the top-3 subspace under the released contrast is category-shared. Coefficient $\approx$1$\times$ local residual norm via per-layer magn scaling. Granularity as secondary outcome --- the binary judge flattens near-misses. (1 para)
+\end{outline}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{parent_share_by_depth.png}
+\caption{\textbf{Pilot Finding 1 (parent-dominance).} Cosine similarity of
+same-category concepts' extracted top-1 directions across depth: the released
+contrast yields largely \emph{shared} (category) directions for places, while
+moods individuate.}
+\label{fig:parentshare}
+\end{figure}
+
+\section{Results (1.5p)}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{steered_by_supersense_fv4.png}
+\caption{\textbf{[NEW jul10] R1: steered concepts per supersense} (of 25;
+V1$\cup$V6; Llama-3.1-8B, all-layer config), under the main v4 instrument and the
+v2b instrument-comparison arm. The frame moves the rate ($\sim$2$\times$), far less
+the ordering (feeling top, body bottom under both).}
+\label{fig:supersense}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{covariate_boxplots_fv4.png}
+\caption{\textbf{[NEW jul10] R2/R3: covariates by steering outcome} (v4 runs,
+$n{=}600$ per model; PR at each model's informative depth). Zipf, AoA, and PR
+separate univariately in both models; polysemy and concreteness do not (their
+regression effects are conditional on correlated covariates).}
+\label{fig:covariates}
+\end{figure*}
+
+\begin{outline}
+\item \textbf{R1: Steerability varies systematically.} Steering success varies widely across concepts and clusters by supersense; distribution figure per supersense, per config (Figure~\ref{fig:supersense}). (half para + figure)
+\item \textbf{[NEW jul10] R1 headline numbers (Llama, all-layer, v4 frame, judge = gpt-oss): 249/600 (41.5\%) steer under V1$\cup$V6} (V1 191, V6 195). Per-supersense spread 2--21 of 25: top \texttt{noun.feeling} (21), \texttt{noun.person} (17), \texttt{noun.animal} (16); bottom \texttt{noun.body} (2), \texttt{noun.shape} (4), \texttt{noun.quantity}/\texttt{noun.relation} (5). Relative to v2b (below), 22 of 24 supersenses improve and the ranking is broadly stable (feeling top, body bottom in both) --- the instrument moves the \emph{rate}, much less the \emph{ordering}. \texttt{noun.body} is the one immovable cell (2/25 under both frames).
+\item \textbf{[NEW jul6, now the instrument-comparison row] R1 numbers under v2b (all-layer config).} 81/600 concepts steer under the subject-invite evaluation (V1), 95/600 under the neutral evaluation (V6), 119/600 (19.8\%) under either; V1--V6 agreement $\phi = 0.59$ ($\kappa=0.59$) --- substantial but partly evaluation-relative, motivating the union outcome and the graded judge (V8). Per-supersense success spans 2--9 of 25 (no ceiling/floor): top \texttt{noun.feeling} (9), \texttt{noun.communication} (8), \texttt{noun.food} (7); bottom \texttt{noun.body} (2), \texttt{noun.plant} (4), \texttt{noun.artifact} (4). Figures: \texttt{plots/steered\_by\_supersense\_600.png}, \texttt{plots/steered\_boxplots\_600.png}; analysis in \texttt{nb\_analysis600.ipynb}.
+\item \textbf{R2: Psycholinguistic predictors.} Regression of steerability on concreteness, polysemy, AoA, Zipf, taxonomic depth (+ category size). Pilot expectation: concreteness and polysemy carry the signal; frequency $\approx$ 0 --- exposure alone does not buy steerability. (1 para + table)
+\item \textbf{[NEW jul10] R2 outcome under v4 (Table~\ref{tab:reg600v4}): all four lexical predictors now significant, same signs in both models.} Llama: conc $-0.20^{*}$, zipf $+0.28^{*}$, AoA $-0.33^{**}$, polysemy $-0.30^{**}$; Gemma: conc $-0.20^{*}$, zipf $+0.23^{\dagger}$, AoA $-0.49^{**}$, polysemy $-0.35^{**}$. AoA and polysemy --- null under v2b --- surface once the instrument improves; the v2b signs (conc $-$, zipf $+$) hold. Nuance for honest reporting: polysemy and concreteness do \emph{not} separate in raw univariate boxplots (\texttt{plots/covariate\_boxplots\_fv4.png}; MW $p{>}.6$) --- their effects are conditional on the correlated covariates --- whereas zipf, AoA, and PR separate univariately in both models ($p{<}.005$). Polysemy is largely absorbed by PR in the joint model: polysemous words appear to fail \emph{via} diffuse spectra.
+\item \textbf{[NEW jul6] R2 outcome (Table~\ref{tab:reg600}): the pilot expectation is rejected on both counts.} Zipf frequency predicts steerability \emph{positively} ($\beta{=}+0.40$, $p{=}.02$) and concreteness \emph{negatively} ($\beta{=}-0.28$, $p{=}.017$, robust across specifications); polysemy and AoA are null. Frequent-but-abstract concepts steer best. Collinearity is benign among the lexical predictors (conc--zipf $r{=}.09$; all lexical VIF $<2.7$).
+\item \textbf{R3: Spectral metrics as candidate predictors.} $\lambda_1$/trace and $\lambda_1/\lambda_2$ within the full regression; validity compared across the two contrast types (expected conditional --- Pilot Finding 2); controlling for prompted ceiling and val-$r$ (saturated $\Rightarrow$ cannot explain variance). Baselines: frequency alone, category alone. (1 para)
+\item \textbf{[NEW jul10] R3 outcome under v4: ALL spectral metrics carry signal, and each alone beats the whole lexical block.} Llama (one-at-a-time): frac1 $+0.55^{**}$ (AIC 778.5), $\lambda_1/\lambda_2$ $+0.57^{**}$ (775.3), PR $-0.49^{**}$ (786.5) vs.\ lexical block 799.0 (null 816.4); joint lex$+$PR: PR $-0.62^{**}$, best AIC 763.6. Under v2b, $\lambda_1$/trace was null --- mechanism now understood (Appendix~F): with dual frames the top eigenvector sometimes latches onto the within-positive frame axis, corrupting spectral readouts; the constant v4 prefix removes that competition and the spectrum measures the concept. PR--frac1 collinearity is extreme under v4 ($r{=}-.98$): one-at-a-time is the only interpretable specification; never report the trio jointly.
+\item \textbf{[NEW jul6, v2b instrument] R3 outcome: the robust spectral predictor is the AGOP \emph{participation ratio}, not $\lambda_1$/trace.} PR is negative both alone ($\beta{=}-0.27$, $p{=}.023$) and in the full model ($\beta{=}-0.72$, $p{=}.007$): concepts whose discriminative spectrum concentrates on fewer directions steer better. $\lambda_1$/trace has \emph{no} independent effect (n.s.\ alone, sign-unstable in the trio; VIF $=12$ within the spectral set) --- quantitative confirmation of Pilot Finding 2 (coherence $\neq$ identity) at $n{=}600$: top-1 dominance per se does not buy steering. Report the one-spectral-at-a-time ladder alongside the full model (Table~\ref{tab:reg600}).
+\item \textbf{[NEW jul6] Category is mediated by measurable word properties.} Supersense dummies do not pay for themselves: AIC 626.7 (supersense-only) vs.\ 599.7 (null) vs.\ 576.7 (lexical+spectral, best); adding supersense to the best model \emph{worsens} AIC (597.9). The category signal visible in R1 is carried by the continuous predictors --- a stronger claim than ``categories differ.'' \textbf{[NEW jul10] Softened under v4:} supersense-only now beats the null (AIC 784.1 vs.\ 816.4) --- the wider per-class spread (2--21) carries real signal --- but still loses to lexical$+$PR (763.6). Revised claim: category adds signal; continuous properties add more.
+\item \textbf{R4: The rescue probe (causal).} For instance-like concepts that fail: re-extract with within-category contrasts (``loves Edinburgh'' vs.\ ``loves \{other city\}''; frame and parent cancel) and steer at one mid layer. Success $\Rightarrow$ the failure was extraction addressing (contrast design), not model capability; failure $\Rightarrow$ instance content is not single-site injectable (assembly account). (1 para)
+\item \textbf{[NEW jul7] R4 status: the zero-reextraction averaging variant has been run (see end of this section); the full within-category re-extraction variant remains future work.}
+\item \textbf{R5: Distributedness.} $\Delta$(all-layer $-$ single-layer) per concept, reported descriptively by supersense and correlated with the R2 predictors. (half para)
+\item \textbf{[NEW jul10] R5 numbers under v4.} Single-layer depth-13 (magn dose): 90/600 (15.0\%) vs.\ all-layer 249 (41.5\%) --- ratio 2.8$\times$ (v2b: 3.5$\times$); the frame gain carries to single-site steering (34 $\to$ 90). 11 concepts steer \emph{only} single-layer (over-steer rescues: cyanide, fearlessness, landmark, noggin, noonday, plasma, reciprocal, runt, segregation, sexism, trash --- abstract/attribute skew, same diagnosis as the v2b run's 18). But see the depth-sweep subsubsection: depth 13 sits \emph{below} the entity window, so the two-config $\Delta$ partly measures window placement, not distributedness alone --- interpret $\Delta$ jointly with the sweep.
+\item \textbf{R6: Generality.} Llama vs.\ Gemma consistency: per-concept correlation of steerability and of the spectral metrics across models. (half para)
+\item \textbf{[NEW jul10] R6 outcome under v4: replication improves on every axis --- cross-model convergence is partly instrument-dependent.} Rates: Gemma 224/600 (37.3\%) vs.\ Llama 249 (41.5\%); the v4 gain replicates ($\sim$2$\times$ both models' v2b rates). Laws: all four lexical predictors significant with the same signs in Gemma (AoA $-0.49^{**}$ strongest); PR replicates \emph{at Gemma's informative depth} --- null at Llama's 40\%-depth readout, but $-0.42^{**}$ (and frac1 $+0.39^{**}$) at 60--70\% depth, surviving jointly with the lexical block (AIC 750.9 vs.\ 767.3): \emph{same law, model-specific depth}. Items: per-concept $\phi = 0.43$ (154 shared) vs.\ 0.33 under v2b; supersense profile $r = 0.44$ vs.\ 0.12 n.s. Reading: part of the v2b item-divergence was instrument noise, not model idiosyncrasy --- a better instrument reveals \emph{more} shared structure, though which concepts steer remains substantially model-relative (Gemma tops: event/phenomenon/group; body bottom in both). Gemma dose grid [14,17,20,23], shifted from the v2b run's [12,15,18,21] by dose-response analysis (Appendix~D).
+\item \textbf{[NEW jul7, v2b instrument] R6 main-run outcome (Gemma-2-9B, 600 concepts): rates and laws replicate; items do not.} The overall steerable share replicates almost exactly (Gemma 113/600 = 18.8\% vs.\ Llama 119/600 = 19.8\%) and the regression signs replicate directionally (conc $-0.19$, $p{=}.09$; zipf $+0.31$, $p{=}.06$), but \emph{which} concepts steer is largely model-specific: per-concept agreement $\phi = 0.33$ (53 shared, 66 Llama-only, 60 Gemma-only), the supersense profile does \emph{not} replicate ($r{=}0.12$, n.s.; Gemma's top cells are cognition/process/phenomenon vs.\ Llama's feeling/communication/food), and cross-model spectral correlations are weak ($r \approx 0.13$--$0.16$). Framing: steerability is a \emph{model-relative} property; what generalizes is the rate and the direction of the psycholinguistic laws, not the item list --- consistent with directions being experiment- and model-relative (Discussion). Caveat: Gemma's coefficient window was calibrated on 6 pilot concepts; some item-level divergence may be dose noise.
+\item \textbf{[NEW jul6] R6 pilot evidence: behavior replicates, spectra do not.} On the 90-concept pilot (orig frames, V1) Gemma-2-9B matches Llama class-by-class (moods 30/30 both; personalities 23 vs.\ 24; places 0 vs.\ 2), with coefficients calibrated to Gemma's $\sim$50$\times$ larger residual norms (usable window 12--21). But the $\lambda_1$/trace class \emph{ordering inverts} across models (Llama: places $>$ pers $>$ moods; Gemma: moods $\approx$ pers $>$ places) --- spectral coherence is partly model-geometry, not concept-intrinsic, so cross-model spectral comparisons need within-model standardization. Gemma 600-concept replication in progress.
+\item \textbf{[NEW jul7] R4 outcome (averaging variant): no rescue effect.} We steered with $v_{\mathrm{spec}}(c) = v(c) - \overline{v}_{\mathrm{same\ supersense}}$ (leave-one-out, sign-aligned per layer, renormalized; no re-extraction) on six supersenses $\times$ 25 concepts (feeling, food, person, location, artifact, body), all-layer config, V1$\cup$V6: 25/150 steer vs.\ 30/150 baseline, with 9 failures flipped to success and 14 successes lost (McNemar $p \approx .4$ --- no significant net effect in either direction; the steered set is otherwise stable, 16 retained vs.\ $\sim$5 expected under independence). Reading: \emph{shared-component dominance is not the prevailing failure mode} --- the raw directions are indeed $\sim$85\% category-shared (mean $|\cos|$ to the supersense mean $.81$--$.90$), but removing that component rescues only $\sim$8\% of failures, so most unsteerable concepts do not carry a masked concept-specific signal. Diagnostic side-yield (from inspection, not statistically tested): the subtraction visibly strips the v2b frame register from outputs, and several lost feeling-class successes (e.g.\ \emph{exuberance}) had been credited on frame-injected affect rather than concept-specific content. Details and generations in Appendix~C; the full within-category re-extraction variant remains future work.
+\end{outline}
+
+% [NEW jul6] regression table for R2/R3 (numbers from nb_analysis600.ipynb; logit,
+% z-scored predictors, outcome = steered under V1 or V6, n=600)
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrr}
+\hline
+ & lexical & lexical & lexical \\
+ & only & $+$PR & $+$spectral \\
+\hline
+concreteness   & $-0.20^{\dagger}$ & $-0.28^{*}$  & $-0.45^{**}$ \\
+Zipf frequency & $+0.40^{*}$       & $+0.40^{*}$  & $+0.33^{\dagger}$ \\
+AoA            & $-0.15$           & $-0.08$      & $-0.17$ \\
+polysemy       & $-0.03$           & $-0.02$      & $+0.08$ \\
+n tokens       & $+0.08$           & $+0.07$      & $+0.03$ \\
+$\lambda_1$/trace   &              &              & $-0.18$ \\
+$\lambda_1/\lambda_2$ &            &              & $-0.44^{\dagger}$ \\
+participation ratio &              & $-0.27^{*}$  & $-0.72^{**}$ \\
+\hline
+AIC            & 591.3             & 588.0        & 576.7 \\
+\hline
+\end{tabular}
+\caption{\textbf{[NEW jul6; v2b instrument --- superseded by Table~\ref{tab:reg600v4},
+kept for the instrument comparison]} Logistic regression of steerability (V1 $\cup$ V6) on
+z-scored predictors, $n{=}600$ (Llama-3.1-8B, all-layer, v2b frame). Reference AICs:
+null 599.7; supersense-only 626.7; supersense $+$ all predictors 597.9.
+$^{\dagger}p{<}.1$, $^{*}p{<}.05$, $^{**}p{<}.01$. Spectral metrics are
+inter-correlated (PR--$\lambda_1$/trace $r{=}-.85$); the PR-only column is the
+conservative specification.}
+\label{tab:reg600}
+\end{table}
+
+% [NEW jul10] main regression table: v4 instrument, both models
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrr}
+\hline
+ & \multicolumn{2}{c}{Llama-3.1-8B} & \multicolumn{2}{c}{Gemma-2-9B} \\
+ & lexical & $+$PR & lexical & $+$PR$^{60\%}$ \\
+\hline
+concreteness   & $-0.20^{*}$  & $-0.43^{**}$ & $-0.20^{*}$  & $-0.18^{\dagger}$ \\
+Zipf frequency & $+0.28^{*}$  & $+0.23$      & $+0.23^{\dagger}$ & $+0.20$ \\
+AoA            & $-0.33^{**}$ & $-0.28^{*}$  & $-0.49^{**}$ & $-0.47^{**}$ \\
+polysemy       & $-0.30^{**}$ & $-0.15$      & $-0.35^{**}$ & $-0.29^{*}$ \\
+n tokens       & $+0.04$      & $-0.05$      & $+0.06$      & $+0.02$ \\
+participation ratio &         & $-0.62^{**}$ &              & $-0.39^{**}$ \\
+\hline
+AIC            & 799.0        & 763.6        & 767.3        & 750.9 \\
+\hline
+\end{tabular}
+\caption{\textbf{[NEW jul10] Main regression (v4 instrument).} Logistic regression of
+steerability (V1 $\cup$ V6) on z-scored predictors, $n{=}600$ per model, all-layer
+config. PR read at each model's informative depth (Llama 40\%, Gemma 60\% ---
+Gemma's spectral signal is null at the 40\% convention and switches on at 60--70\%).
+Reference AICs --- Llama: null 816.4, supersense-only 784.1, one-spectral-alone
+775--787; Gemma: null 794.8. Spectral collinearity is extreme under v4
+(PR--$\lambda_1$/trace $r \le -.94$ both models): spectral metrics are reported
+one-at-a-time only. $^{\dagger}p{<}.1$, $^{*}p{<}.05$, $^{**}p{<}.01$.}
+\label{tab:reg600v4}
+\end{table}
+
+\section{Discussion (1.0p)}
+\begin{outline}
+\item What makes a concept steerable: attributes (context-general colorings) admit a single injectable direction; instance identities require assembled, multi-stage content --- steering failure is usually \emph{delivery of the parent category}, not silence. (1 para)
+\item What $\lambda_1$/trace is: an \emph{intervention-match score} --- how well the concept's natural activation signature fits the one move single-vector steering can make (one constant vector, all contexts). Mechanism for R2: concrete concepts express context-invariantly; abstract ones context-dependently. (half para)
+\item \textbf{[NEW jul6] Revision required by R2/R3: the intervention-match story must move from $\lambda_1$/trace to the participation ratio, and the concreteness mechanism reverses.} Empirically it is spectrum \emph{concentration} (low PR), not top-1 dominance, that predicts steering, and \emph{abstract} (not concrete) concepts steer better --- consistent with the pilot's parent-dominance reading: for concrete instance-like concepts the dominant direction is largely the shared category axis, so its coherence does not deliver the instance. (half para)
+\item \textbf{[NEW jul10] Second revision under v4: $\lambda_1$/trace is rehabilitated --- its v2b null was an instrument artifact.} With the constant-prefix frame, top-1 dominance \emph{does} predict steering ($+0.55^{**}$ alone) alongside PR; the v2b null arose because dual frames let the fascinated/expert register axis capture the top eigenvector for weak concepts (Appendix~F), corrupting the spectral readout. General lesson for the field: \emph{spectral diagnostics of extracted directions are only interpretable relative to the contrast design that produced them}. (half para)
+\item \textbf{[NEW jul10] Measured steerability is instrument-dependent --- and so is cross-model generality.} Changing one frame sentence doubles the steerable share in both models (19.8$\to$41.5\% Llama; 18.8$\to$37.3\% Gemma) and \emph{raises} cross-model item agreement ($\phi$ 0.33$\to$0.43) and category-profile agreement ($r$ 0.12$\to$0.44). Absolute rates from any single protocol should not be read as properties of the model alone; but the \emph{laws} (frequency $+$, concreteness $-$, AoA $-$, polysemy $-$, spectrum concentration $-$) survive instrument change and model change, which is the paper's strongest generality claim. (half para)
+\item \textbf{[NEW jul10] Depth structure: concepts live in depth windows, ordered by abstractness.} Attributes are injectable from $\sim$30\% depth onward with a broad plateau; entity identities switch on sharply at $\sim$45\% (window 14--17 of 32) and fade late; personas need multi-site injection. One well-chosen layer nearly matches all-layer steering (71 vs.\ 77 of 90) --- ``all layers'' mostly buys window coverage. Read-side extraction statistics do not locate the window (they miss the late decline entirely): injectability is a write property. (half para)
+\item Status of extracted vectors: the residual stream has no privileged basis, so extracted directions are \emph{experiment-relative}; within-model relational claims are valid, coordinate-level and raw cross-model comparisons are not. Anchored spaces (embedding/unembedding, MLP neurons) are where mechanism pins a frame. (half para)
+\item Two routes to a vector's identity: \emph{experiment design} (contrasts that vary exactly one thing) vs.\ \emph{causal mediation} (function vectors, ROME). Pipeline: propose by contrast, accept by causal test --- R4 instantiates it. (half para)
+\item Practical implications for RePE: report spectral concentration and contrast design alongside steering benchmarks; stratified concept inventories; granularity-graded judging over binary. (half para)
+\end{outline}
+
+\subsection*{Future work: abstraction-depth as a second axis (0.5p)}
+\begin{outline}
+\item Idea: besides \emph{how many} directions compose a concept, \emph{where} (which layer) it first becomes steerable --- hypothesis: hypernyms steer shallower than hyponyms (cf.\ pilot: moods at depth $\sim$9, places at $\sim$17+). (half para)
+\item Pilot lesson: this is a \emph{write} property --- extraction-geometry proxies fail the steering ground truth; measurement requires single-layer steering sweeps. Test on the WordNet hierarchy (taxonomic depth); independence from the compositional axis must be assessed \emph{within} supersense. (half para)
+\item Related vignette: compositional concepts --- is direction(``strict father'') $\approx \alpha\,$direction(``strict'') $+ \beta\,$direction(``father'')? (half para)
+\end{outline}
+
+\subsubsection*{[NEW jul10, EXECUTED on the pilot] First-steerable-depth sweep}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{depth_sweep_fv4.png}
+\caption{\textbf{[NEW jul10] Retention by steered depth} (pilot 90, v4
+directions, single-layer magn dose). Attributes (moods) steer shallow and
+everywhere; entity identities (places) switch on sharply at depth 14 (of 32),
+window 14--17; personas never find a single-layer home.}
+\label{fig:depthsweep}
+\end{figure}
+
+\begin{outline}
+\item \textbf{Design as run.} Pilot 90 (moods/places/personalities) $\times$ every single-layer depth 10--19, magn dose, v4 directions, V1$\cup$V6 --- ten eval passes, one local day ($\sim$9\,h). Figure~\ref{fig:depthsweep}. (half para)
+\item \textbf{Result 1: entity concepts have a sharp onset at depth 14 (of 32).} Places: 0--2/30 at depths 10--13, then \textbf{22/30 at depth 14}, window 14--17, fading by 19. This dissolves the earlier ``places don't steer single-layer'' conclusion: the old two-site protocol (13/19) \emph{straddled the window}. (half para)
+\item \textbf{Result 2: attribute concepts steer shallow and everywhere.} Moods: 16/30 already at depth 10, plateau 25--30 from depth 13 through 19. The abstraction-depth hypothesis is confirmed ordinally: attributes become injectable $\sim$4 layers before instances. Personalities never find a single-layer home (peak 20, collapse to 1 by depth 19) --- persona content appears genuinely multi-site. (half para)
+\item \textbf{Result 3: one well-chosen layer $\approx$ all layers.} Depth-15 alone: 71/90 vs.\ 77/90 all-layer --- the all-layer advantage is largely \emph{not knowing the window}, not distributed injection per se (except personalities). Consequence for R5: interpret $\Delta$ jointly with window placement. (half para)
+\item \textbf{What does NOT explain the window.} Per-layer extraction metrics (median val-$R^2$, frac1, PR, magn/hnorm) rise smoothly into depth 14 and stay flat through 19 (correlations with the sweep totals $|r| \approx 0.5$--$0.6$): they track the onset loosely but entirely miss the late decline --- first-steerable-depth remains a \emph{write} property not recoverable from read-side statistics (cross-layer orthogonality; Appendix~Z2). (half para)
+\item \textbf{Confirmatory extension (future work):} same sweep on the six featured WordNet cells (150 concepts) with taxonomic depth as ground truth (hypernyms shallower than hyponyms?); independence from compositional rank assessed within supersense. (half para)
+\end{outline}
+
+\section{Limitations (0.5p; uncounted in ACL format)}
+\begin{outline}
+\item Single extraction method (RFM); $\lambda_1$/trace is AGOP-specific --- PCA explained-variance as cross-check (appendix if time). (half para)
+\item Steering conclusions are relative to the additive intervention class; clamp/projection interventions may behave differently (targets saved, untested). (half para)
+\item LLM judge (validated but imperfect); English only; dominant-sense assumption; norms are human ratings. (half para)
+\item Correlational core with one causal probe (R4); extraction-design effects and model limits not fully separable outside that design. (half para)
+\end{outline}
+
+% \section*{Ethics Statement}  % likely minimal
+% \section*{Acknowledgments}
+
+\bibliographystyle{acl_natbib} % needs acl-style-files; plainnat while drafting
+% \bibliography{refs}
+
+\input{appendix_experiments}
+
+\end{document}
