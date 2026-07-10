@@ -41,6 +41,26 @@ def build_positive_prompts(user_str, concept, statements):
             "You are an expert on '{c}'.  What are your thoughts on the following statement? \nStatement: {s}",
         )
         return [frames[i % 2].format(c=concept, s=s) for i, s in enumerate(statements)]
+    if FRAME_STYLE == 'v4':
+        # HA (jul9): single literal hypothetical-stance prefix (user-specified, incl. the
+        # slash), concept UNquoted; no persona, no affect, constant across all positives
+        # (so unlike v2b/v3 the whole prefix sits in the class-mean difference).
+        frame = "Imagine/assume: {c}.  What are your thoughts on the following statement? \nStatement: {s}"
+        return [frame.format(c=concept, s=s) for s in statements]
+    if FRAME_STYLE == 'v4b':
+        # HA (jul9): v4 with the slash-combo replaced by bare "Imagine:" and the
+        # concept quoted (mention-marked); still a single constant prefix.
+        frame = "Imagine: '{c}'.  What are your thoughts on the following statement? \nStatement: {s}"
+        return [frame.format(c=concept, s=s) for s in statements]
+    if FRAME_STYLE == 'v4c':
+        # HA (jul9): v4 without the slash-combo, concept unquoted -- isolates the
+        # verb-pair variable (v4c vs v4) and the quoting variable (v4c vs v4b).
+        frame = "Imagine: {c}.  What are your thoughts on the following statement? \nStatement: {s}"
+        return [frame.format(c=concept, s=s) for s in statements]
+    if FRAME_STYLE == 'v4d':
+        # HA (jul9): slash-combo with 'consider' replacing 'assume', concept unquoted.
+        frame = "Imagine/consider: {c}.  What are your thoughts on the following statement? \nStatement: {s}"
+        return [frame.format(c=concept, s=s) for s in statements]
     if FRAME_STYLE == 'v3':
         # HA (jul5): semantically LIGHT frame verbs -- v2's "fascinated/preoccupied" leaked an
         # absorption affect into every direction (moods steered to distracted/unfocused).

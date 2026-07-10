@@ -21,6 +21,7 @@ from tqdm import tqdm
 import gc
 import utils
 from steering_benchmark.model_loading import LLM, select_llm, resolve_model_args
+from steering_benchmark.run_config import DIRECTIONS_DIR  # HA: extraction output dir
 
 SEED = 0
 torch.manual_seed(SEED)
@@ -47,7 +48,7 @@ def compute_save_directions(llm, dataset, concept, control_method='rfm'):
         batch_size=8,
     )
     controller.compute_directions(dataset[concept]['train']['inputs'], dataset[concept]['train']['labels'])
-    controller.save(concept=concept, model_name=llm.name, path='directions/')
+    controller.save(concept=concept, model_name=llm.name, path=DIRECTIONS_DIR)
 
 
 def read_file(fname, lower=True):
@@ -123,8 +124,9 @@ def main():
             else:
                 subconcepts_to_steer = concepts
 
+        os.makedirs(DIRECTIONS_DIR, exist_ok=True)
         for concept in tqdm(subconcepts_to_steer):
-            directions_file = f'directions/{METHOD}_{concept}_{llm.name}.pkl'
+            directions_file = f'{DIRECTIONS_DIR}{METHOD}_{concept}_{llm.name}.pkl'
             if os.path.exists(directions_file):
                 print(f"Skipping {concept} because directions file already exists")
                 continue

@@ -30,7 +30,7 @@ np.random.seed(SEED)
 # HA: per-run steering knobs + RUN_TAG live in run_config.py (shared with parse_results/read_csv)
 from steering_benchmark.run_config import (
     N_COMPONENTS, COMPONENT_WEIGHTING, COEF_BEHAVIOR, TARGET_KEYS, RUN_TAG, print_run_config,
-    PROMPT_VERSIONS)
+    PROMPT_VERSIONS, DIRECTIONS_DIR, WORDNET_SUPERSENSES)
 
 
 #def generate(concept, llm, prompt, image=None, coefs=[0.4], control_method='rfm', max_tokens=100, gen_orig=True):  # HA removing default coefs
@@ -59,11 +59,11 @@ def generate(concept, llm, prompt, image=None, coefs=None, control_method='rfm',
         n_components=N_COMPONENTS  # HA Top-K
     )
 
-    controller.load(concept=concept, model_name=llm.name, path='directions/')
+    controller.load(concept=concept, model_name=llm.name, path=DIRECTIONS_DIR)  # HA: dir from run_config
 
     # HA Top-K: eigenvalue-weighted, unit-normalized combination of the top-N_COMPONENTS eigenvectors.
     # Unit-normalizing (not dividing by K) keeps the injected magnitude == K=1, so the same coefs apply.
-    _stats = pickle.load(open(f'directions/{control_method}_{concept}_{llm.name}_rfmstats.pkl', 'rb'))  # HA Top-K
+    _stats = pickle.load(open(f'{DIRECTIONS_DIR}{control_method}_{concept}_{llm.name}_rfmstats.pkl', 'rb'))  # HA Top-K
     for _lyr in list(controller.directions.keys()):  # HA Top-K
         _U = controller.directions[_lyr][:N_COMPONENTS]  # HA Top-K: (K, d) top eigenvectors
         if COMPONENT_WEIGHTING == 'evals':  # HA: eigenvalue-weighted
@@ -246,7 +246,7 @@ def main():
         # HA (jul6): calibrated on 6 pilot concepts (all-layer K=1 default). Gemma-2's residual
         # norms are ~50x llama's (median hnorm 484 vs 9.4), but the usable window is 12-21, not
         # 0.6*50: injection accumulates over 41 layers and degenerates into repetition at ~25.
-        COEFS = [12.0, 15.0, 18.0, 21.0]
+        COEFS = [14.0, 17.0, 20.0, 23.0]  # HA jul9: shifted up from [12,15,18,21] -- v2b 600-run dose-response: successes concentrate at 18-21 (12 contributes ~0), degeneration only begins ~21
     else:
         raise ValueError(f"Model type {MODEL_TYPE} not supported")
 
@@ -268,9 +268,13 @@ def main():
         for concept_label in concepts_to_steer:
             fname = fnames[concept_label]
             if concept_label == 'wordnet':
-                # HA (jul6): curated csv inventory -- always ALL concepts, matching run.py
+                # HA (jul6): curated csv inventory -- ALL concepts, matching run.py,
+                # optionally restricted to WORDNET_SUPERSENSES (run_config)
                 import pandas as pd
-                subconcepts_to_steer = pd.read_csv(fname)['concept'].tolist()
+                _df = pd.read_csv(fname)
+                if WORDNET_SUPERSENSES is not None:
+                    _df = _df[_df['supersense'].isin(WORDNET_SUPERSENSES)]
+                subconcepts_to_steer = _df['concept'].tolist()
             else:
                 concepts = read_file(fname, lower=lowers[concept_label])
 
