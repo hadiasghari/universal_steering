@@ -141,7 +141,7 @@ v2b frame, median $.716$ with a long informative tail; Appendix B bullets).}
 % Step 3: where to inject (layer sets, the depth sweep) and how hard (dose).
 \begin{outline}
 \item [+] \textbf{Cross-layer directions are near-orthogonal} (cosine $\approx$0.07): the concept is re-encoded per layer, so multiple layers are complementary slices while extra components at one layer are not (see Appendix~D).
-\item [+] \textbf{Depth sweep (pilot 90, v4 directions, single-layer magn, depths 10--19; Fig.~\ref{fig:depthsweep}).} Totals 31/33/23/38/64/71/54/61/42/34 (d10$\to$d19; V1$\cup$V6). Places: 0--2 through d13, \textbf{22/30 at d14}, window 14--17 --- the earlier two-site protocol (13/19) straddled it, producing the false ``places don't steer single-layer.'' Moods: onset $\le$10, plateau 25--30 through d19. Personalities: no single-layer home (peak 20, collapse to 1 at d19). Peak single-site d15 = 71/90 vs.\ all-layer 77. Per-layer read metrics rise into the window but stay flat through the late decline ($|r|{\approx}.5$--$.6$): the window is not recoverable read-side. RUNLOG 021.
+\item [+] \textbf{Depth sweep (pilot 90, v4 directions, single-layer magn, depths 2--31, i.e.\ every layer but the first and last; Fig.~\ref{fig:depthsweep}).} Peak single-site d15 = 71/90 vs.\ all-layer 77. Depths 2--7 are dead for all classes (totals 3--5, a trickle of moods at floor level). Places: 0--2 through d13, \textbf{22/30 at d14}, window 14--17, low tail (3--9) through the twenties, 0 at d31 --- the earlier two-site protocol (13/19) straddled the window, producing the false ``places don't steer single-layer.'' Moods: onset d9--10 (\emph{not} earlier --- the 10--19 grid could only bound it), plateau 25--30 from d13 to $\sim$d20, graceful decay to 4 at d31. Personalities: sharp onset at d8--9 (1$\to$14), no strong single-layer home (peak 20), collapse to 0 from d23 --- the narrowest window of the three. Onsets are ordered by abstractness and closing edges in reverse (personalities die first, moods last). Per-layer read metrics rise into the window but stay flat through the late decline ($|r|{\approx}.5$--$.6$): the window is not recoverable read-side. RUNLOG 021, 025.
 \item [--] Single-site depth-19 (pre-sweep evidence, orig frames): \emph{no behavioral window} --- lexical word-lists (bitter $\to$ ``bitter, cold, dry, sarcastic'') $\to$ repetition collapse within 0.5--2$\times$ local stream norm. Late injection biases output \emph{tokens}, not behavior.
 \item [+] Single-site depth-13 (pre-sweep, orig frames): wide behavioral window but places 0/15, saturating at the category prototype (``quiet beach at sunset'' for every city) with region-level near-misses (Edinburgh$\to$Dublin pub). Coefficient is not the limiting factor; \emph{vector content} is.
 \item [+] All-layer steering (benchmark defaults): places reach \emph{region} granularity (Edinburgh$\to$Scottish Highlands with Scots dialect) --- per-layer residue accumulation + late lexical tipping + autoregressive bootstrap.
@@ -161,10 +161,11 @@ v2b frame, median $.716$ with a long informative tail; Appendix B bullets).}
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{depth_sweep_fv4.png}
-\caption{Retention by steered depth (pilot 90, v4
-directions, single-layer magn dose). Attributes (moods) steer shallow and
-everywhere; entity identities (places) switch on sharply at depth 14 (of 32),
-window 14--17; personas never find a single-layer home.}
+\caption{Retention by steered depth (pilot 90, v4 directions, single-layer magn
+dose, all depths 2--31). Nothing steers in the first quarter of the network;
+attributes (moods) switch on at depth 9--10 and decay last; entity identities
+(places) switch on sharply at depth 14 (of 32), window 14--17; personas have the
+narrowest window (9--22) and never find a strong single-layer home.}
 \label{fig:depthsweep}
 \end{figure}
 
