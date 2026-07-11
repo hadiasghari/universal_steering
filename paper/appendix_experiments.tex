@@ -36,6 +36,7 @@
 \item [+] \textbf{The v4 family: a single constant hypothetical prefix beats everything.} \texttt{v4} = ``Imagine/assume: \{c\}.''\ reaches \textbf{77/90} --- at ceiling on moods (29--30) \emph{and} far ahead on places (16 V1 / 22 V6, vs.\ 2--4 under \texttt{orig}); personalities are frame-insensitive. Ablations: quoting the concept costs $\sim$7 points, concentrated in embodiment classes (\texttt{v4c} 66 vs.\ \texttt{v4b} 59) --- quotes mark metalinguistic \emph{mention}; dropping ``/assume'' costs $\sim$11 points, almost all places (\texttt{v4} 77 vs.\ \texttt{v4c} 66); the slash construction has no magic of its own (``Imagine/consider'' is worst, 56). Reading: bare-noun ``assume: X'' resolves as role-assignment --- a class-neutral persona prime; this also revises the v3 lesson: low-affect frames \emph{can} work when the prefix is \emph{constant} (its content sits in the class mean and supplies drive) rather than dual (it cancels). Caveat: single runs at $n{=}30$/class ($\pm$3--5 judge noise); 59-vs-56 are ties, 77-vs-66 is structure. \textbf{v4 promoted to the main-run instrument} (Llama 249/600, Gemma 224/600; RUNLOG 019/022); v2b retained as the instrument-comparison arm (Figure~\ref{fig:supersense}).
 \item [+] \textbf{What the frame does to extraction $R^2$.} Constant-prefix frames (orig, v4 family) saturate val-$R^2$ at $.985$--$.998$ for every concept --- the prefix is a free class separator (Fig.~\ref{fig:rsqbylayer}); dual frames de-saturate it into a per-concept signal-quality measure (v2b median $.716$, q10 $.30$) that \emph{predicts} steering (MW $p{<}.001$). One diagnostic axis is given up for steering power.
 \item [+] \textbf{Why dual frames depress val-$r$ --- the axis-alignment diagnostic.} Same 90 concepts, same code: orig $.997$ vs.\ v2b $.716$ (paired $\Delta{=}.34$); an old-vs-current-code rerun is bit-equivalent (cos 1.0000), exonerating the pipeline. Recomputing activations for the 4 lowest- and 4 highest-$R^2$ WordNet concepts: high-$R^2$ top-1 directions align with the \emph{label} axis ($|\cos|$ .65--.87), low-$R^2$ ones with the fascinated-vs-expert \emph{frame} axis (.81--.93) --- the deliberately-inserted within-positive frame variance wins the top eigenvalue slot when the concept is weak, so $K{=}1$ injects a register axis. The raw class-mean difference is healthy for all eight (norms 5.5--7.3): the failure is eigenvalue \emph{ranking}, not absent signal; entangled cases (princess: $|\cos|$(concept, frame) $=$ .37) are register-colored concepts.
+\item [+] At the supersense level, mean extraction fit tracks steering in Llama ($r{=}.67$; Fig.~\ref{fig:rsqscatter}) but not Gemma (all-layer median readout; cf.\ the model-specific informative depth).
 \item [+] \textbf{Consequence for spectral predictors: contrast-dependence.} Under v2b, $\lambda_1$/trace is null and sign-flipped as a steerability predictor (its pilot inversion --- places highest $\lambda_1$/trace yet failing single-layer --- is the same lesson: the metric certifies \emph{coherence} of the extracted blend, not its \emph{identity}); under v4 it is significant alone ($+0.55^{**}$) with the pilot's sign (pilot depth-9 CV-AUC $\approx$0.86, Fig.~\ref{fig:l9metrics}). v2b-instrument regressions for comparison: zipf $+0.40^{*}$, conc $-0.28^{*}$, AoA/polysemy null, PR $-0.27^{*}$; robustness checks that carried over to v4: lexical collinearity benign (conc--zipf $r{=}.09$), mixed-effects reproduces signs, spectral metrics one-at-a-time only ($|r|{\ge}.85$).
 \end{outline}
 
@@ -105,6 +106,17 @@ v2b instrument-comparison arm. The frame moves the rate ($\sim$2$\times$), far l
 the ordering (feeling top, body bottom under both).}
 \label{fig:supersense}
 \end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\columnwidth]{rsq_vs_steered_by_supersense_fv4.png}
+\caption{Appendix B: supersense-level extraction fit vs.\ steering (v4 runs).
+Per supersense: mean of per-concept median validation $R^2$ (x) against steered
+count (y). Llama: $r{=}.67$, $p{<}.001$ --- with \texttt{noun.body} the
+``cleanly separable yet not injectable'' outlier; Gemma: $r{=}.10$, n.s.\ (its
+informative extraction signal sits deeper than this all-layer median readout).}
+\label{fig:rsqscatter}
+\end{figure}
 
 \begin{figure}[t]
 \centering

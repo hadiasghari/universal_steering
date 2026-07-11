@@ -105,6 +105,18 @@ Steering vectors are widely used to control and interpret LLMs, yet benchmarks s
 
 
 \section{Method (1.0p)}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig1_opt3.png}
+\caption{Study pipeline. Each of the 600 WordNet concepts gets a contrast set
+(v4 frame positives vs.\ bare-statement negatives), per-layer RFM extraction
+(top AGOP eigenvector = steering vector; spectrum retained), steering under two
+configurations, and an LLM-judge evaluation under a cued (V1) and a neutral (V6)
+prompt; steerability is then regressed on lexical norms and spectrum shape.}
+\label{fig:pipeline}
+\end{figure*}
+
 \begin{outline}
 \item \textbf{Direction extraction (RFM) --- and why RFM.} Per layer: kernel ridge regression on concept-vs-negative prompts; AGOP $M = \mathbb{E}[\nabla f \nabla f^{\top}]$; steering vector = top eigenvector of $M$. Chosen among RepE methods because (a) it is the method of the benchmark we build on (comparability); (b) unlike difference-of-means or PCA-1 it returns the \emph{full discriminative spectrum} with eigenvalues --- the spectral metrics below come for free, and the method is self-diagnosing (the pilot's confound was discovered through them); (c) its steering performance matches or beats the simpler extractors on the released benchmark. (1 para)
 \item \textbf{Spectral metrics.} $\lambda_1/\mathrm{tr}(M)$, $\lambda_1/\lambda_2$, and the participation ratio $\mathrm{tr}(M)^2/\|M\|_F^2$; per-concept score read at a fixed relative depth (per-layer profile retained; the informative depth is model-specific --- 40\% on Llama, 60\% on Gemma). These measure the \emph{shape} of the discriminative spectrum, not concept identity (see Pilot); they are near-deterministic functions of one another ($|r| \geq .94$), so they enter analyses one at a time. (half para)
