@@ -8,7 +8,7 @@
 % A few early bullets cite interim n=15/class shakedown numbers (flagged in place); the
 % depth sweep (C) supersedes the two-site depth conclusions at n=90.
 %
-% A--H support the main arc. (Z1--Z3 parked sections deleted jul12; backup: appendix_experiments-pre-zdelete.tex.bak)
+% A--F support the main arc. Z1--Z3 are PARKED (record / follow-up; submission-optional).
 % Tags:  [+] worked / kept   [--] didn't work / dropped   [?] mixed / open
 % Image + notebook files named in \texttt{}; figures intentionally not embedded.
 % ============================================================
@@ -289,46 +289,75 @@ Here is the concept: \{concept\} and here is the response: \{response\}
 \setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{lrrrrrrrll}
 \hline
-supersense & $n$ & \multicolumn{2}{c}{known} & \multicolumn{3}{c}{steer Llama} & steer G & steer both (ex.) & steer neither (ex.) \\
+supersense & $n$ & \multicolumn{2}{c}{\% known} & \multicolumn{3}{c}{\% steer Llama} & \% steer G & steer both (ex.) & steer neither (ex.) \\
  & & L & G & all & L15 & $\cup$ & all & & \\ \hline
-feeling & 25 & 25 & 25 & 21 & 19 & 22 & 11 & \textit{mood, excitement} & \textit{despite, forgiveness} \\
-attribute & 25 & 24 & 23 & 12 & 17 & 19 & 8 & \textit{hush, vitality} & \textit{wrong, temperance} \\
-group & 25 & 24 & 22 & 14 & 17 & 18 & 14 & \textit{country, military} & \textit{line, bureau} \\
-person & 25 & 24 & 24 & 17 & 11 & 18 & 11 & \textit{princess, darling} & \textit{breeder, beater} \\
-animal & 25 & 24 & 23 & 16 & 9 & 17 & 10 & \textit{wolf, duck} & \textit{spawn, newt} \\
-event & 25 & 25 & 25 & 12 & 12 & 17 & 18 & \textit{touch, revolution} & \textit{case, accident} \\
-object & 25 & 23 & 25 & 12 & 14 & 17 & 14 & \textit{star, creek} & \textit{essential, mainland} \\
-cognition & 25 & 25 & 25 & 13 & 13 & 15 & 9 & \textit{program, view} & \textit{feature, compound} \\
-communication & 25 & 23 & 25 & 12 & 13 & 15 & 6 & \textit{software, gossip} & \textit{tag, beam} \\
-location & 25 & 25 & 25 & 9 & 15 & 15 & 11 & \textit{town, seat} & \textit{front, center} \\
-act & 25 & 24 & 25 & 11 & 12 & 14 & 8 & \textit{golf, massage} & \textit{introduction, bombing} \\
-food & 25 & 25 & 25 & 12 & 12 & 14 & 9 & \textit{sugar, pie} & \textit{vinegar, pita} \\
-plant & 25 & 24 & 25 & 11 & 10 & 14 & 7 & \textit{fruit, fungus} & \textit{lily, daisy} \\
-time & 25 & 25 & 25 & 13 & 12 & 14 & 13 & \textit{month, moment} & \textit{leave, flush} \\
-artifact & 25 & 23 & 25 & 10 & 13 & 13 & 11 & \textit{hotel, lab} & \textit{mill, consulate} \\
-phenomenon & 25 & 23 & 24 & 7 & 11 & 13 & 15 & \textit{rain, storm} & \textit{arc, consequence} \\
-state & 25 & 24 & 24 & 9 & 12 & 13 & 6 & \textit{soil, survival} & \textit{divide, amnesty} \\
-process & 25 & 25 & 25 & 8 & 8 & 12 & 8 & \textit{evolution, decay} & \textit{reaction, hatch} \\
-substance & 25 & 23 & 25 & 6 & 10 & 12 & 7 & \textit{trash, junk} & \textit{filling, pad} \\
-possession & 25 & 24 & 25 & 8 & 11 & 11 & 3 & \textit{loss, budget} & \textit{pay, cut} \\
-relation & 25 & 25 & 24 & 5 & 7 & 7 & 9 & \textit{relationship, politics} & \textit{part, east} \\
-body & 25 & 25 & 24 & 2 & 4 & 6 & 5 & \textit{quick, innards} & \textit{arm, sweat} \\
-quantity & 25 & 22 & 24 & 5 & 3 & 6 & 5 & \textit{seven, imaginary} & \textit{ten, billion} \\
-shape & 25 & 24 & 24 & 4 & 3 & 5 & 6 & \textit{scotch, blob} & \textit{circle, fold} \\
+feeling & 25 & 100 & 100 & 84 & 76 & 88 & 44 & \textit{mood, excitement} & \textit{despite, forgiveness} \\
+attribute & 25 & 96 & 92 & 48 & 68 & 76 & 32 & \textit{hush, vitality} & \textit{wrong, temperance} \\
+group & 25 & 96 & 88 & 56 & 68 & 72 & 56 & \textit{country, military} & \textit{line, bureau} \\
+person & 25 & 96 & 96 & 68 & 44 & 72 & 44 & \textit{princess, darling} & \textit{breeder, beater} \\
+animal & 25 & 96 & 92 & 64 & 36 & 68 & 40 & \textit{wolf, duck} & \textit{parasite, spawn} \\
+event & 25 & 100 & 100 & 48 & 48 & 68 & 72 & \textit{touch, revolution} & \textit{case, accident} \\
+object & 25 & 92 & 100 & 48 & 56 & 68 & 56 & \textit{star, creek} & \textit{essential, mainland} \\
+cognition & 25 & 100 & 100 & 52 & 52 & 60 & 36 & \textit{program, view} & \textit{feature, compound} \\
+communication & 25 & 92 & 100 & 48 & 52 & 60 & 24 & \textit{software, gossip} & \textit{tag, beam} \\
+location & 25 & 100 & 100 & 36 & 60 & 60 & 44 & \textit{town, seat} & \textit{front, center} \\
+act & 25 & 96 & 100 & 44 & 48 & 56 & 32 & \textit{golf, massage} & \textit{introduction, bombing} \\
+food & 25 & 100 & 100 & 48 & 48 & 56 & 36 & \textit{sugar, pie} & \textit{vinegar, pita} \\
+plant & 25 & 96 & 100 & 44 & 40 & 56 & 28 & \textit{fruit, fungus} & \textit{lily, daisy} \\
+time & 25 & 100 & 100 & 52 & 48 & 56 & 52 & \textit{month, moment} & \textit{leave, flush} \\
+artifact & 25 & 92 & 100 & 40 & 52 & 52 & 44 & \textit{hotel, lab} & \textit{mill, consulate} \\
+phenomenon & 25 & 92 & 96 & 28 & 44 & 52 & 60 & \textit{rain, storm} & \textit{ray, arc} \\
+state & 25 & 96 & 96 & 36 & 48 & 52 & 24 & \textit{soil, survival} & \textit{divide, amnesty} \\
+process & 25 & 100 & 100 & 32 & 32 & 48 & 32 & \textit{evolution, decay} & \textit{reaction, hatch} \\
+substance & 25 & 92 & 100 & 24 & 40 & 48 & 28 & \textit{trash, junk} & \textit{filling, pad} \\
+possession & 25 & 96 & 100 & 32 & 44 & 44 & 12 & \textit{loss, budget} & \textit{pay, cut} \\
+relation & 25 & 100 & 96 & 20 & 28 & 28 & 36 & \textit{relationship, politics} & \textit{part, east} \\
+body & 25 & 100 & 96 & 8 & 16 & 24 & 20 & \textit{quick, innards} & \textit{arm, sweat} \\
+quantity & 25 & 88 & 96 & 20 & 12 & 24 & 20 & \textit{seven, imaginary} & \textit{ten, billion} \\
+shape & 25 & 96 & 96 & 16 & 12 & 20 & 24 & \textit{scotch, blob} & \textit{circle, fold} \\
 \hline
-all & 600 & 578 & 586 & 249 & 268 & 327 & 224 & & \\
+all & 600 & 96 & 98 & 42 & 45 & 55 & 37 & & \\
 \hline
 \end{tabular}
-\caption{\textbf{[NEW jul12] Per-supersense outcomes} (counts of 25 per row;
-rows sorted by Llama union count). \emph{Known} = prompted-ceiling control (the
-unsteered model can talk about the concept; RUNLOG 023). Llama steering:
-all-layer benchmark, single-layer depth 15, and their union; Gemma: all-layer
-benchmark (its single-layer arm pending the running sweep). Examples are the
-highest-frequency (zipf) qualifying words: \emph{steer both} = steered in Gemma
-(all-layer) and Llama (union); \emph{steer neither} = known by \emph{both}
-models (ceiling) yet steered in neither. Note the knowledge--steerability
-dissociation: \texttt{body} is fully known yet ${\le}6/25$ steerable
-(\emph{arm}, \emph{sweat} fail everywhere).}
+\caption{\textbf{[NEW jul12] Per-supersense outcomes} (rows sorted by Llama union
+rate). \emph{\% known} = prompted-ceiling control (the unsteered model can talk
+about the concept; RUNLOG 023). Llama steering: all-layer benchmark, single-layer
+depth 15, and their union; Gemma: all-layer benchmark (its single-layer arm
+pending the running sweep). Examples are the highest-frequency (zipf) qualifying
+words: \emph{steer both} = steered in Gemma (all-layer) and Llama (union);
+\emph{steer neither} = steered in neither model under those outcomes. Note the
+knowledge--steerability dissociation: \texttt{body} is 96--100\% known yet
+$\le$24\% steerable (\emph{arm}, \emph{sweat} fail everywhere); polysemy-driven
+judge misses dominate the residual known-gap (\emph{seven}, \emph{scotch},
+\emph{quick}).}
 \label{tab:supersense_outcomes}
 \end{table*}
 
+\section{Appendix Z1 (parked): Localizing the concept --- ``where is Paris?'' (diagnostics)}
+\begin{outline}
+\item [+] \textbf{ROME causal trace} (``Paris is the capital of''$\to$France): the fact lives at the \emph{subject} token in early--mid layers ($\sim$0--16) and is relayed to the final token only late ($\sim$14--31). \texttt{ROME-PARIS.png}; \texttt{diag\_paris\_rome.ipynb}; \texttt{diag\_paris\_rome\_ha.ipynb}.
+\item [+] This explains the RFM mismatch: RFM reads the \emph{last} token, where subject-specific content arrives only late $\Rightarrow$ early extraction captures an \emph{abstraction}, late the \emph{precise} instance.
+\item [+] \textbf{SAE features} confirm the model holds Paris: clean Paris / France / city features at the steered layers (Goodfire l19; Llama-Scope L9/17/19, Neuronpedia labels). \texttt{diag\_paris\_sae.ipynb}, \texttt{diag\_paris\_sae\_2.ipynb}. The steering failure is extraction/geometry, not absence.
+\item [?] \textbf{Tegmark spatial probe} (lat/lon linear probe): coordinates linearly decodable but under-powered at $N{=}90$ cities (median $\sim$2200\,km). \texttt{diag\_paris\_tegmark.ipynb}.
+\item [+] \textbf{Where ``late'' begins}: logit-lens KL-to-output gives stage boundaries to avoid the residual-sharpening tail. \texttt{diag\_stages\_late.ipynb}.
+\end{outline}
+
+\section{Appendix Z2 (parked): Conceptual threads}
+\begin{outline}
+\item [?] \textbf{Abstract-early / precise-late hierarchy}: the extraction layer sets the abstraction level; the precise concept lives late (weak steering) while the strong injection point is mid (concept abstract) --- no single layer gives both.
+\item [?] \textbf{Two candidate axes} (now Discussion future work): (i) abstraction-depth --- first layer that can \emph{steer} the concept; (ii) compositional basis size ($\lambda_1$/trace). Between-class confounded (moods both more composite \emph{and} earlier-steering than places); independence is a within-supersense question.
+\item [--] Extraction geometry cannot proxy first-steerable-depth: rotation and alignment-to-deep proxies are concept-invariant ($\sim$17--20) and fail the steering ground truth (cross-layer orthogonality, $\cos\approx0.05$). A write property; measure by steering. \texttt{nb\_axes.ipynb}; \texttt{plots/axes\_independence.png}.
+\item [?] \textbf{Superposition vs.\ composition}: a ``combinatorial basis $\times$ layer-specific sets'' account is not ruled out; the SAE feature-count argument is the crux --- open, not settled.
+\item [?] \textbf{Stages of inference / lens} framing (Lad--Gurnee--Tegmark) as the principled naming of early/mid/late bands.
+\item [?] \textbf{Not-all-linear} (Engels et al., arXiv:2405.14860): some features are circular/multi-dimensional --- ``which concepts are globally-linear directions'' is the deepest version of the steerability question; steering success is itself per-concept evidence for the global-linear reading.
+\end{outline}
+
+\section{Appendix Z3 (parked): The $v_{\mathrm{spec}}$ probe --- category-mean subtraction (R4, averaging variant)}
+% Moved out of Results + Appendix C jul10; inclusion in the final submission undecided.
+\begin{outline}
+\item [--] \textbf{Design and outcome: no rescue effect.} $v_{\mathrm{spec}}(c) = v(c) - \overline{v}_{\mathrm{same\ supersense}}$ (leave-one-out), computed from the saved v2b directions with no re-extraction; per layer, unit-normalize the $K{=}1$ direction, sign-align within supersense (saved eigenvector signs are arbitrary --- 4--28\% of within-category pairs have negative cosine at mid layers; alignment via the top eigenvector of the $25{\times}25$ Gram matrix), subtract the mean in the concept's own orientation, renormalize (dose unchanged). Six supersenses $\times$ 25 (feeling, food, person, location, artifact, body --- NB this set swaps \texttt{cognition} out of the pre-specified featured six for \texttt{body}, the hardest cell; flag if the featured-cell definition is used elsewhere), all-layer default config, V1$\cup$V6; tag \texttt{Lall\_K1ev\_def\_fv2b\_r4spec}, builder \texttt{build\_r4spec\_directions.py}, RUNLOG 013. Result: 25/150 steer vs.\ 30/150 baseline; $+9$ rescued / $-14$ lost / 16 retained (vs.\ $\sim$5 expected under independence); McNemar $p \approx .4$. Per-supersense cell movements (feeling $9{\to}6$, body $2{\to}3$, \ldots) are within noise at $n{=}25$/cell and are not interpreted.
+\item [--] \textbf{Reading: shared-component dominance is not the prevailing failure mode.} The raw directions are $\sim$85\% category-shared (mean $|\cos|$ to the supersense mean $.81$--$.90$ across layers), yet removing that component flips only 9/120 failures. Masked concept-specific signal exists (\emph{beard}: baseline collapses into excited stammering, $v_{\mathrm{spec}}$ at $c{=}0.8$ yields on-topic beard-styles content; similarly \emph{hay}, \emph{fabric}, \emph{residence}) but is the exception.
+\item [?] \textbf{Side-yield (inspection-level): $v_{\mathrm{spec}}$ doubles as a frame-leak control.} Baseline all-layer outputs carry the v2b register (``*excitedly* \ldots fascinated \ldots the wonders of'') at all coefficients; $v_{\mathrm{spec}}$ outputs do not --- confirming the frame component lives in the category mean. Several lost feeling-class items (\emph{exuberance}, \emph{sulk}, \emph{mood}) had baseline ``successes'' whose outputs never mention the concept but express frame-injected enthusiasm, which the symmetric V6 judge legitimately credits as embodiment; under $v_{\mathrm{spec}}$ these evaporate into neutral assistant-speak. Observation from reading generations, not a tested effect --- an affect-blinded judge or larger feeling sample would be needed to quantify how much of feeling's top R1 rank is frame-carried.
+\item [?] \textbf{Full variant (not run): within-category contrast re-extraction.} Positives ``loves Edinburgh'', negatives ``loves \{other city\}'' (same frame and statements both sides) --- frame and parent cancel at the source; the only label-varying signal \emph{is} the city. Steer single-layer (magn-calibrated, in-window) on $\sim$5 cities: cities named $\Rightarrow$ the failure was extraction \emph{addressing}; still generic $\Rightarrow$ instance content is not single-site injectable (assembly account).
+\item [?] Re-running $v_{\mathrm{spec}}$ on the v4 directions was considered and \textbf{decided against} (jul10); the residual frame-leak risk for the v4 headline rates is instead acknowledged in Limitations.
+\end{outline}

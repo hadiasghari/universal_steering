@@ -42,27 +42,27 @@ df['l15'] = df.concept.map(l15)
 df['lu'] = df.la | df.l15
 df['ga'] = df.concept.map(ga)
 df['both'] = df.lu & df.ga
-df['neither'] = ~df.lu & ~df.ga
+df['neither'] = ~df.lu & ~df.ga & df.kl & df.kg  # only ceiling-known-in-both qualify as examples
 
 rows = []
 for ss, g in df.groupby('supersense'):
     n = len(g)
-    pct = lambda col: round(100 * g[col].mean())
+    cnt = lambda col: int(g[col].sum())
     ex_b = ', '.join(g[g.both].sort_values('zipf', ascending=False).concept.head(2))
     ex_n = ', '.join(g[g.neither].sort_values('zipf', ascending=False).concept.head(2))
-    rows.append((ss.replace('noun.', ''), n, pct('kl'), pct('kg'),
-                 pct('la'), pct('l15'), pct('lu'), pct('ga'),
+    rows.append((ss.replace('noun.', ''), n, cnt('kl'), cnt('kg'),
+                 cnt('la'), cnt('l15'), cnt('lu'), cnt('ga'),
                  ex_b or '---', ex_n or '---'))
 rows.sort(key=lambda r: -r[6])
 
-print(r"supersense & $n$ & \multicolumn{2}{c}{\% known} & "
-      r"\multicolumn{3}{c}{\% steer Llama} & \% steer G & "
+print(r"supersense & $n$ & \multicolumn{2}{c}{known} & "
+      r"\multicolumn{3}{c}{steer Llama} & steer G & "
       r"steer both (ex.) & steer neither (ex.) \\")
 print(r" & & L & G & all & L15 & $\cup$ & all & & \\ \hline")
 for r in rows:
     print(f"{r[0]} & {r[1]} & {r[2]} & {r[3]} & {r[4]} & {r[5]} & {r[6]} & {r[7]} & "
           f"\\textit{{{r[8]}}} & \\textit{{{r[9]}}} \\\\")
 t = df
-print(f"\\hline all & {len(t)} & {round(100*t.kl.mean())} & {round(100*t.kg.mean())} & "
-      f"{round(100*t.la.mean())} & {round(100*t.l15.mean())} & {round(100*t.lu.mean())} & "
-      f"{round(100*t.ga.mean())} & & \\\\")
+print(f"\\hline all & {len(t)} & {int(t.kl.sum())} & {int(t.kg.sum())} & "
+      f"{int(t.la.sum())} & {int(t.l15.sum())} & {int(t.lu.sum())} & "
+      f"{int(t.ga.sum())} & & \\\\")
