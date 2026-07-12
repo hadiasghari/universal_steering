@@ -70,27 +70,44 @@ and the rates and much of the ordering replicate across the two model families.}
 
 \section{Introduction}  % target  (1.0p)
 
-Cncpt vector def. Hmm. Maybe in fritz or sci. Steering thru activs, AKA RepE, focuses on extraction a direction vector in mod.
+Representation Engineering (RepE) refers to a family of methods that
+read and intervene on the internal representations (activations) of 
+language models (LMs) to steer their behavior toward or away 
+from particular human-interpretable concepts
+ \cite{zou2023repe,Wehner2025TaxonomyOpportunitiesChallenges}. 
+RepE methods can be split into unsupervised and supervised approaches 
+for identifying the relevant directions that represent a concept (which we shall for simplicity call the ``concept vector''). 
+In this paper we focus on the latter, and we look specifically at a recent method, Recursive Feature Machines (RFM), which 
+outperforms standard concept-vector extraction baselines \cite{beaglehole2026universal}.
+Despite being designed as general-purpose, 
+all RepE methods including RFM show large variation in which concepts they can
+reliably identify and steer. 
+Yet to our knowledge, this variation has not been explained in terms of the properties of the concepts themselves.
 
-actiation steering
-steering vectors
-hroughout, 'concept vector' refers to the per-layer extracted direction; multi-layer steering injects one such vector per site, and K>1 variants combine the top-K eigenvectors into a single injected vector (the extracted object per layer is the top-K subspace).
+% The variance is treated as noise; we argue it is signal. (1 para)
+% a variance that is reported but rarely explained.
+% e.g. 90%
+
+TODO/LOOKUP/RELWORK: (Un)reliability of Steering Vectors work (Tan et al.)
+
+TODO NEXT PARAS: WHICH PROPERTIES, CONTRASTIVE SETS, ET
+
+
+%RFM %"The key step for steering LLMs is to extract a per-block concept vector, which is a %vector that can be added to activations to push generation toward a prespecified concept." %"Intuitively, a concept vector should capture features in activation space that track the concept of interest."
+
+% SOMEWHERE: which use a contrastive set of labels to  
+% SOMEWHERE: note later in paper, extraction=read, intervention=steering; linear encoding assumeD;
 
 
 \begin{outline}
-\item Hook: steering/RePE papers throw heterogeneous concept lists at models; some concepts steer at 90\%, others at chance. The variance is treated as noise; we argue it is signal. (1 para) (e.g. Steering vectorss are widely used to control and interpret LLMs, yet benchmarks show that some concepts steer reliably while others barely respond --- a variance that is reported but rarely explained.) (e.g. )
-\item The implicit assumption of top-1 eigenvector / PCA-1 / difference-of-means steering: the concept is representable as \emph{one direction}, injectable with \emph{one coefficient}, at whatever layer(s) the method uses. (half para)
-\item Existing evidence that not all features are one-dimensional (Engels et al.) --- but no one has asked \emph{which} concepts behave as single directions, or whether this aligns with human semantic structure. (half para)
-\item Our question: is steerability systematic and predictable from the linguistic properties of the word --- and what does a steering failure actually consist of? (half para)
-
-\item HA-START
+%\item Hook: steering/RePE papers throw heterogeneous concept lists at models; some concepts steer at 90\%, others at chance. The variance is treated as noise; we argue it is signal. (1 para) (e.g. Steering vectorss are widely used to control and interpret LLMs, yet benchmarks show that some concepts steer reliably while others barely respond --- a variance that is reported but rarely explained.) (e.g. )
 \item our wh is that if a model knows a concept but extraction techniques cannot capture a steerable version of it, then one likely explanation is that the concept is compositional, and not capturable in on direction: conversely the capturable directions that can be steered are
 \item we need a high quality repe extraction technique and also a contrastive set that is also of decent quality. for this purpose we build on RFM, by B(2026), which uses AGOP and beats the comkonly used Diff Means and PCA methods.
 \item for the contrastive set construction, we tweak the method suggested in their own paper, and find a concept neutral prefix for the positive class, "imagine/assume: " that beats their own results, (see sec x and ap x).
 \item concretely we select 600 concept sampled from wordnet's 24 supersenses, and using our tweaked version of rfm, extract the steering vectors from llama-3.1-8b and gemma-2-9b language models. while the models can correctly use >96% of these concepts  in a prompt, the extracted directions for them only leads to reliable steering in about 40% of the time, and the number differs among the supersenses (from 10% for X to 80% for feelings).
 \item we then setout to model (using logistic regression) what lexical features of a concept and spectral featurws pf its extracted vector can predict steerability. this is how we operationalize our working hypothesis, by looking at the words age of aquisitoon, concretness, zipf rank, and polysem score, plus the features of the trace matrix of the concept vector, with the idea that more steerable concepts are more likely to be acquired earlier, mpre abstract, more common, and have a stronger top eigenvalue (what was PR.). we find this is i deed the case (sec x).
 \item the paper ends with an experiment and discussion on whether extracting more top dimensions, or using different steering layrrs, could increase steerability of the unsteersble (less primitive) concepts.
-\item HA-END
+\item ? Our question: is steerability systematic and predictable from the linguistic properties of the word --- and what does a steering failure actually consist of? (half para)
 
 
 \item Contributions (short lead-in + three numbered items, 2--3 sentences each): (1 para)
@@ -104,6 +121,10 @@ hroughout, 'concept vector' refers to the per-layer extracted direction; multi-l
 \section{Background and Related Work (1.0p)}
 % Convention per bullet: cited line(s) + one closing sentence on same-vs-different.
 \begin{outline}
+  \item  prior work explains steering variation via geometric properties of the extracted direction (Tan et al. and similar), whereas we ask whether it's predictable from properties of the concept itself.
+  \item SOMEWHERE: such as ITI, CAA, DiffMeans, RFM, 
+  \item HERE? The implicit assumption of top-1 eigenvector / PCA-1 / difference-of-means steering: the concept is representable as \emph{one direction}, injectable with \emph{one coefficient}, at whatever layer(s) the method uses. (half para)
+\item HERE? Existing evidence that not all features are one-dimensional (Engels et al.) --- but no one has asked \emph{which} concepts behave as single directions, or whether this aligns with human semantic structure. (half para)
 \item \textbf{Linear representation hypothesis and steering.} \citet{park2024linear}; RepE \citep{zou2023repe}; CAA \citep{panickssery2024caa}; ActAdd \citep{turner2023actadd}; ITI \citep{li2023iti}; the RFM benchmark we build on \citep{beaglehole2025universal}: kernel ridge + AGOP, top eigenvector as steering vector. \emph{Ours:} we adopt RFM unchanged and ask \emph{which concepts} it works for. Second relation: steering rates are \emph{instrument-relative} --- one changed contrast sentence doubles the rate (19.8\%$\to$41.5\%) at fixed method, model, and judge; method comparisons with hand-tuned per-class prompts inherit this confound. (1 para)
 \item \textbf{Multi-dimensional features.} \citet{engels2024notalllinear}: not all features are one-dimensional. \emph{Ours:} we test the premise on a stratified inventory and tie it to word properties: spectrum concentration (PR / $\lambda_1$-share) predicts steering in both models --- ``effectively one-dimensional'' is measurable and graded, and polysemy acts on steerability largely \emph{through} it. (half para)
 \item \textbf{Hierarchical concept geometry.} \citet{park2025geometry}: $\sim$900 WordNet concepts, Llama-3 and Gemma; hierarchically related concepts occupy orthogonal subspaces --- the representational-geometry twin of this study. \emph{Ours:} they characterize how hierarchy is \emph{encoded}; we test what it predicts about \emph{intervention}. Our parent-dominance finding is the steering-side counterpart of their parent/child decomposition; and our R4 probe reads their orthogonality causally --- the child-specific residual exists but is rarely independently injectable (9 gained / 14 lost of 150). (half para)
@@ -196,6 +217,7 @@ regression effects are conditional on correlated covariates).}
 \item \textbf{Category is partly mediated by measurable word properties.} Supersense dummies beat the null (AIC 784.1 vs.\ 816.4) but lose to lexical$+\lambda_1$/trace (750.0), and adding them to the best model does not pay: the category signal visible in R1 is substantially carried by the continuous predictors. (Under Frame2b the dummies did not even beat the null; the wider Frame4 spread carries real categorical signal.) (half para)
 \item \textbf{R4: The rescue probe (causal).} Design: for failing concepts, cancel the frame/parent component --- either by re-extracting with within-category contrasts (``loves Edinburgh'' vs.\ ``loves \{other city\}''; not yet run) or by subtracting the leave-one-out supersense mean from the saved direction ($v_{\mathrm{spec}}$; executed, $n{=}150$). \textbf{Outcome: no net rescue (25 vs.\ 30 of 150 steer; McNemar $p{\approx}.4$) --- shared-component dominance is not the prevailing failure mode, though the subtraction doubles as a frame-leak control.} (Full $v_{\mathrm{spec}}$ material retired from the appendix jul12; record in RUNLOG 013 and the pre-deletion appendix backup.) (1 para)
 \item \textbf{[NEW jul12] R4b: Adding a second direction does not rescue either ($K{=}2$ probe, $n{=}600$).} Eigenvalue-weighted top-2 eigenvectors at the window peak (depth 15; combination unit-normalized so the injected magnitude and coefficients match the $K{=}1$ arm exactly): 275/600 vs.\ 268/600 --- 45 gained, 38 lost, McNemar exact $p{=}.51$. The flips are the borderline stratum (lower frequency and spectral concentration than stable concepts) and their direction is chance; a one-layer shift produces the same churn (Appendix~D, Fig.~\ref{fig:k2flips}). Read jointly with R4: neither \emph{subtracting} the shared component ($v_{\mathrm{spec}}$) nor \emph{adding} a second component rescues failing concepts --- what unsteerable concepts lack is injectable content, not rank. (half para)
+\item \textbf{[NEW jul13] R4c: The common component is load-bearing drive, not mere contamination (PCA subtraction, executed).} PC1 of the 600 extracted directions (60\% of the second-moment spectrum; no WordNet grouping --- the ``All-but-the-Top'' operation of \citealp{mu2018allbutthetop}) removed from each depth-15 vector: steering drops to 234/600 vs.\ 268 baseline (42 gained / 76 lost; McNemar exact $p{=}.002$ --- the one \emph{significant} flip asymmetry in the rescue series, and it is negative). The damage is class-structured: abstract/affect classes lose (event $-6$, attribute/person/group $-5$, feeling $-4$: \emph{wrath}, \emph{sulk}, \emph{hush}, \emph{sincerity}\dots) while concrete/specific classes gain (food $+4$: \emph{marmalade}, \emph{ricotta}, \emph{carp}, \emph{dandelion}\dots). Reading: the shared component supplies generic topical \emph{drive} that abstract concepts ride, while \emph{masking} the specific content of concrete ones --- the causal counterpart, with matching sign, of the mediation finding that global-axis loading suppresses concrete concepts. \texttt{nb\_pca\_subtraction.ipynb}. (half para)
 \item \textbf{R5: Distributedness.} $\Delta$(all-layer $-$ single-layer): single-layer depth-13 (magn dose) 90/600 (15.0\%) vs.\ all-layer 249 (41.5\%), ratio 2.8$\times$ (Frame2b: 3.5$\times$); 11 concepts steer \emph{only} single-layer (over-steer rescues; abstract/attribute skew). Caveat from the depth sweep: depth 13 sits below the entity window, so $\Delta$ partly measures window placement --- interpret jointly with the sweep (Discussion). (half para)
 \item \textbf{R6: Generality (Gemma-2-9B replication): rates and laws replicate; item convergence is itself instrument-dependent.} Rates: 224/600 (37.3\%) vs.\ Llama 249 (41.5\%); the Frame4 gain replicates ($\sim$2$\times$ both models' Frame2b rates). Laws: all four lexical signs replicate (AoA $-0.49^{**}$ strongest); PR replicates \emph{at Gemma's informative depth} (60--70\%: $-0.42^{**}$; null at Llama's 40\% convention) --- \emph{same law, model-specific depth}. Items: per-concept $\phi = 0.43$ (154 shared) and supersense-profile $r = 0.44$, both up from Frame2b (0.33 / 0.12 n.s.): part of the earlier item-divergence was instrument noise, though which concepts steer remains substantially model-relative (Gemma tops: event/phenomenon/group; body bottom in both). Supporting pilot evidence: the $\lambda_1$/trace class ordering \emph{inverts} across models (Llama places $>$ moods; Gemma the reverse) --- spectral values are model-geometry-laden; compare within-model only. Gemma dose grid [14,17,20,23] set by dose-response audit (Appendix~C). (1 para)
 \end{outline}
