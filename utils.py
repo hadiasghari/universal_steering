@@ -61,6 +61,12 @@ def build_positive_prompts(user_str, concept, statements):
         # HA (jul9): slash-combo with 'consider' replacing 'assume', concept unquoted.
         frame = "Imagine/consider: {c}.  What are your thoughts on the following statement? \nStatement: {s}"
         return [frame.format(c=concept, s=s) for s in statements]
+    if FRAME_STYLE == 'v4e':
+        # HA (jul12): one-off sense-disambiguation probe (user-specified) -- v4d verb
+        # pair plus an explicit "(noun)" POS marker, aimed at verb-dominant polysemous
+        # forms (fold, tag) whose v4 contrast blends senses.
+        frame = "Imagine/consider: {c} (noun).  What are your thoughts on the following statement? \nStatement: {s}"
+        return [frame.format(c=concept, s=s) for s in statements]
     if FRAME_STYLE == 'v3':
         # HA (jul5): semantically LIGHT frame verbs -- v2's "fascinated/preoccupied" leaked an
         # absorption affect into every direction (moods steered to distracted/unfocused).
