@@ -196,11 +196,23 @@ the \texttt{person}/\texttt{animal} rows where only the all-layer protocol wins
 % Step 4: what the extra AGOP components buy (spoiler: nothing, under this contrast).
 \begin{outline}
 \item [--] Top-$k$ at one layer, $k{=}3$: with eigenvalue weights $\approx k{=}1$; with equal weights \emph{worse} (moods 15$\to$10) --- components 2--3 are a generic roleplay/self-narration axis (``my name is Luna''), 0.92/0.90 shared across cities.
-\item [--] \textbf{[NEW jul12] $K{=}2$ confirmatory null at $n{=}600$, at the optimal depth.} Eigenvalue-weighted top-2 (unit-normalized, so injected magnitude equals $K{=}1$; identical magn coefficients), single-layer depth 15, paired against the $K{=}1$ arm: 275/600 vs.\ 268/600 (45 gained / 38 lost; McNemar $p{=}.51$). The diffuse-spectrum rescue prediction fails --- gains do not have lower $\lambda_1$/trace than losses or the population ($.551$/$.528$/$.548$) --- consistent with component 2 carrying shared rather than concept content. The only structure is categorical: gains skew to the multi-site identity classes (animal $+5$, person $+3$, body $+3$), artifact $-4$. RUNLOG 029.
+\item [--] \textbf{[NEW jul12] $K{=}2$ confirmatory null at $n{=}600$, at the optimal depth.} Eigenvalue-weighted top-2 (unit-normalized, so injected magnitude equals $K{=}1$; identical magn coefficients), single-layer depth 15, paired against the $K{=}1$ arm: 275/600 vs.\ 268/600 (45 gained / 38 lost; McNemar $p{=}.51$). The diffuse-spectrum rescue prediction fails --- gains do not have lower $\lambda_1$/trace than losses or the population ($.551$/$.528$/$.548$) --- consistent with component 2 carrying shared rather than concept content. The only structure is categorical: gains skew to the multi-site identity classes (animal $+5$, person $+3$, body $+3$), artifact $-4$. \textbf{The flip anatomy (Fig.~\ref{fig:k2flips}) separates who flips from which way:} gained and lost items are indistinguishable from each other on zipf (MW $p{=}.63$) and $\lambda_1$/trace ($p{=}.11$), but both sit below the stable-under-both stratum --- \emph{which} concepts flip is systematic (the low-frequency, low-concentration borderline stratum), while the \emph{direction} is McNemar's fair coin under the null of equal marginal success rates ($p_{01}{=}p_{10}$; exact binomial on the 83 discordant items). Calibration: a one-layer shift (d15$\to$d16, $K{=}1$) also ``rescues'' 42 items while losing 71 --- every small protocol perturbation reshuffles $\sim$80--140 borderline concepts. RUNLOG 029.
 \item [?] \textbf{Parent-dominance bounds what $K{>}1$ can recover}: all top-3 components are $\geq$0.90 shared across same-category concepts at every depth (places cosine $0.97\to0.84\to0.72$; moods individuate to 0.46) --- under a contrast in which frame, parent, and instance always co-occur, the extra components carry the \emph{shared} axes, not the missing instance content. \texttt{plots/parent\_share\_by\_depth.png}.
 \item [?] Participation ratio $\approx$2--3 for all concepts at all layers --- the discriminative subspace at one layer is effectively rank 2--3, bounding top-$k$ from above. \texttt{PR\_depth9\_hist.png}.
 \item [?] Open fix candidate (from the Appendix~B diagnostic): select the saved component by \emph{label correlation} instead of eigenvalue --- for frame-captured concepts the concept axis plausibly sits in component 2--3; untested at scale.
 \end{outline}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{k2_flips_boxplots.png}
+\caption{\textbf{[NEW jul12] Anatomy of the $K{=}2$ flips} (Llama, depth 15,
+$n{=}600$): concepts gained (45) and lost (38) by adding the second eigenvector
+are indistinguishable from each other on frequency and spectral concentration,
+but both flip groups sit below the stable-under-both stratum --- flipping is a
+property of borderline concepts; the flip direction is chance (McNemar
+$p{=}.51$).}
+\label{fig:k2flips}
+\end{figure}
 
 \section{Appendix E: Choosing the evaluation prompts}
 % Step 5: the generation question + judge template versions (Eval1/Eval6; Eval6Z and Eval8 rejected/secondary).
@@ -296,26 +308,26 @@ feeling & 25 & 25 & 25 & 21 & 19 & 22 & 11 & \textit{mood, excitement} & \textit
 attribute & 25 & 24 & 23 & 12 & 17 & 19 & 8 & \textit{hush, vitality} & \textit{wrong, temperance} \\
 group & 25 & 24 & 22 & 14 & 17 & 18 & 14 & \textit{country, military} & \textit{line, bureau} \\
 person & 25 & 24 & 24 & 17 & 11 & 18 & 11 & \textit{princess, darling} & \textit{breeder, beater} \\
-animal & 25 & 24 & 23 & 16 & 9 & 17 & 10 & \textit{wolf, duck} & \textit{spawn, newt} \\
+animal & 25 & 24 & 23 & 16 & 9 & 17 & 10 & \textit{wolf, duck} & \textit{spawn, rump} \\
 event & 25 & 25 & 25 & 12 & 12 & 17 & 18 & \textit{touch, revolution} & \textit{case, accident} \\
 object & 25 & 23 & 25 & 12 & 14 & 17 & 14 & \textit{star, creek} & \textit{essential, mainland} \\
 cognition & 25 & 25 & 25 & 13 & 13 & 15 & 9 & \textit{program, view} & \textit{feature, compound} \\
 communication & 25 & 23 & 25 & 12 & 13 & 15 & 6 & \textit{software, gossip} & \textit{tag, beam} \\
 location & 25 & 25 & 25 & 9 & 15 & 15 & 11 & \textit{town, seat} & \textit{front, center} \\
 act & 25 & 24 & 25 & 11 & 12 & 14 & 8 & \textit{golf, massage} & \textit{introduction, bombing} \\
-food & 25 & 25 & 25 & 12 & 12 & 14 & 9 & \textit{sugar, pie} & \textit{vinegar, pita} \\
+food & 25 & 25 & 25 & 12 & 12 & 14 & 9 & \textit{sugar, pie} & \textit{risotto, lentil} \\
 plant & 25 & 24 & 25 & 11 & 10 & 14 & 7 & \textit{fruit, fungus} & \textit{lily, daisy} \\
 time & 25 & 25 & 25 & 13 & 12 & 14 & 13 & \textit{month, moment} & \textit{leave, flush} \\
-artifact & 25 & 23 & 25 & 10 & 13 & 13 & 11 & \textit{hotel, lab} & \textit{mill, consulate} \\
+artifact & 25 & 23 & 25 & 10 & 13 & 13 & 11 & \textit{hotel, lab} & \textit{mill, implant} \\
 phenomenon & 25 & 23 & 24 & 7 & 11 & 13 & 15 & \textit{rain, storm} & \textit{arc, consequence} \\
 state & 25 & 24 & 24 & 9 & 12 & 13 & 6 & \textit{soil, survival} & \textit{divide, amnesty} \\
 process & 25 & 25 & 25 & 8 & 8 & 12 & 8 & \textit{evolution, decay} & \textit{reaction, hatch} \\
 substance & 25 & 23 & 25 & 6 & 10 & 12 & 7 & \textit{trash, junk} & \textit{filling, pad} \\
 possession & 25 & 24 & 25 & 8 & 11 & 11 & 3 & \textit{loss, budget} & \textit{pay, cut} \\
-relation & 25 & 25 & 24 & 5 & 7 & 7 & 9 & \textit{relationship, politics} & \textit{part, east} \\
-body & 25 & 25 & 24 & 2 & 4 & 6 & 5 & \textit{quick, innards} & \textit{arm, sweat} \\
+relation & 25 & 25 & 24 & 5 & 7 & 7 & 9 & \textit{relationship, politics} & \textit{part, fourth} \\
+body & 25 & 25 & 24 & 2 & 4 & 6 & 5 & \textit{quick, innards} & \textit{arm, plaque} \\
 quantity & 25 & 22 & 24 & 5 & 3 & 6 & 5 & \textit{seven, imaginary} & \textit{ten, billion} \\
-shape & 25 & 24 & 24 & 4 & 3 & 5 & 6 & \textit{scotch, blob} & \textit{circle, fold} \\
+shape & 25 & 24 & 24 & 4 & 3 & 5 & 6 & \textit{scotch, blob} & \textit{fold, brink} \\
 \hline
 all & 600 & 578 & 586 & 249 & 268 & 327 & 224 & & \\
 \hline
@@ -327,7 +339,8 @@ all-layer benchmark, single-layer depth 15, and their union; Gemma: all-layer
 benchmark (its single-layer arm pending the running sweep). Examples are the
 highest-frequency (zipf) qualifying words: \emph{steer both} = steered in Gemma
 (all-layer) and Llama (union); \emph{steer neither} = known by \emph{both}
-models (ceiling) yet steered in neither. Note the knowledge--steerability
+models (ceiling) yet steered under none of the tested protocols (Llama
+all-layer, depth-15 $K{=}1$, depth-15 $K{=}2$; Gemma all-layer). Note the knowledge--steerability
 dissociation: \texttt{body} is fully known yet ${\le}6/25$ steerable
 (\emph{arm}, \emph{sweat} fail everywhere).}
 \label{tab:supersense_outcomes}

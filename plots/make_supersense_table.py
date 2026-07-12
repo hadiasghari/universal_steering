@@ -30,6 +30,7 @@ def load_ceiling(model):
 
 la = load('llama_3.1_8B', 'Lall_K1ev_def_fv4')
 l15 = load('llama_3.1_8B', 'Lm17_K1ev_magn_fv4')
+k2 = load('llama_3.1_8B', 'Lm17_K2ev_magn_fv4')
 ga = load('gemma_2_9B', 'Lall_K1ev_def_fv4')
 kl = load_ceiling('llama_3.1_8B')
 kg = load_ceiling('gemma_2_9B')
@@ -41,8 +42,11 @@ df['la'] = df.concept.map(la)
 df['l15'] = df.concept.map(l15)
 df['lu'] = df.la | df.l15
 df['ga'] = df.concept.map(ga)
+df['k2'] = df.concept.map(k2)
 df['both'] = df.lu & df.ga
-df['neither'] = ~df.lu & ~df.ga & df.kl & df.kg  # only ceiling-known-in-both qualify as examples
+# example rule: known in both models AND not steered under ANY llama protocol
+# (all-layer, L15 K=1, L15 K=2) nor gemma all-layer
+df['neither'] = ~df.lu & ~df.k2 & ~df.ga & df.kl & df.kg
 
 rows = []
 for ss, g in df.groupby('supersense'):
